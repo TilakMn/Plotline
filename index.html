@@ -1,0 +1,1385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Plotline</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:opsz,wght@12..96,500;12..96,700&family=Instrument+Sans:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --bg:#EDF0EE; --surface:#FBFCFB; --sunk:#E3E8E5; --ink:#16211F; --muted:#586562; --line:#CFD7D3;
+  --a-agile:#0B7566; --a-waterfall:#2D4CA6; --a-hybrid:#7A3A86; --a-scaled:#9A4F0C;
+  --warn:#A8410F; --ok:#2C7A3F;
+  box-sizing:border-box; padding-top:env(safe-area-inset-top,0px); padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    color-scheme:dark;
+    --bg:#111715; --surface:#1A2220; --sunk:#0C110F; --ink:#E6ECEA; --muted:#97A5A1; --line:#2D3A36;
+    --a-agile:#4FC7B4; --a-waterfall:#8FA6F2; --a-hybrid:#D195DC; --a-scaled:#E8A45C;
+    --warn:#F0946A; --ok:#7CCB8E;
+  }
+}
+:root[data-theme="dark"]{
+  color-scheme:dark;
+  --bg:#111715; --surface:#1A2220; --sunk:#0C110F; --ink:#E6ECEA; --muted:#97A5A1; --line:#2D3A36;
+  --a-agile:#4FC7B4; --a-waterfall:#8FA6F2; --a-hybrid:#D195DC; --a-scaled:#E8A45C;
+  --warn:#F0946A; --ok:#7CCB8E;
+}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+*,*::before,*::after{box-sizing:inherit}
+body{margin:0;background:var(--bg);color:var(--ink);font:400 15px/1.5 "Instrument Sans",system-ui,-apple-system,"Segoe UI",sans-serif;--acc:var(--a-agile)}
+body[data-m="waterfall"]{--acc:var(--a-waterfall)}
+body[data-m="hybrid"]{--acc:var(--a-hybrid)}
+body[data-m="scaled"]{--acc:var(--a-scaled)}
+body{--acc-soft:color-mix(in srgb,var(--acc) 14%,var(--surface))}
+button,input,select,textarea{font:inherit;color:inherit}
+button{cursor:pointer}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.wrap{max-width:1180px;margin:0 auto;padding:20px 20px 60px}
+
+/* header */
+.top{display:flex;justify-content:space-between;align-items:baseline;gap:12px;flex-wrap:wrap;color:var(--muted);font-size:14px}
+.top strong{color:var(--ink);font-weight:600}
+.link{background:none;border:0;padding:0;color:var(--muted);text-decoration:underline;text-underline-offset:3px}
+[hidden]{display:none!important}
+.h1{font:700 clamp(30px,6.2vw,60px)/1.05 "Bricolage Grotesque","Instrument Sans",sans-serif;letter-spacing:-.02em;margin:18px 0 8px}
+input.h1{display:block;width:100%;background:none;border:0;border-bottom:5px solid var(--acc);border-radius:0;padding:0 0 4px}
+.meth{margin:0 0 4px;font-size:14px;color:var(--muted)}
+.meth select{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:4px 8px;font-weight:600;color:var(--acc)}
+.prow,.mopt{--acc-soft:color-mix(in srgb,var(--acc) 14%,var(--surface))}
+.prow{display:flex;flex-wrap:wrap;align-items:center;gap:8px 18px;padding:16px 0 16px 14px;border-top:1px solid var(--line);border-left:5px solid var(--acc);margin-top:10px}
+.prow .n{font:700 26px/1.15 "Bricolage Grotesque",sans-serif;background:none;border:0;padding:0;text-align:left;flex:1;min-width:200px}
+.prow .n:hover{color:var(--acc)}
+.newp{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:18px;margin:6px 0 18px}
+.newp label[for],.newp legend{font-size:14px;font-weight:600;padding:0;margin-bottom:6px;display:block}
+.newp input[type=text]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+.newp fieldset{border:0;padding:0;margin:16px 0 0}
+.mgrid{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;margin:0 0 16px}
+.mopt{position:relative;display:block}
+.mopt input{position:absolute;opacity:0}
+.mopt div{height:100%;border:1px solid var(--line);border-top:5px solid var(--acc);border-radius:8px;padding:12px;cursor:pointer;font-size:14px;color:var(--muted)}
+.mopt b{display:block;font:700 21px "Bricolage Grotesque",sans-serif;color:var(--ink);margin-bottom:4px}
+.mopt input:checked+div{background:var(--acc-soft);border-color:var(--acc);color:var(--ink)}
+.mopt input:focus-visible+div{outline:2px solid var(--acc);outline-offset:2px}
+
+
+
+#blurb{max-width:62ch;margin:6px 0 18px;color:var(--muted)}
+#stats{display:flex;flex-wrap:wrap;gap:8px 32px;padding:12px 0;border-top:1px solid var(--line);border-bottom:1px solid var(--line)}
+.stat{display:flex;align-items:baseline;gap:8px;font-size:14px;color:var(--muted)}
+.stat b{font:700 22px/1 "Bricolage Grotesque",sans-serif;color:var(--ink)}
+.stat.bad b{color:var(--warn)}
+#stats{margin-bottom:16px}
+.top{align-items:center}
+.tr{display:flex;gap:14px;align-items:center}
+.shell{display:grid;grid-template-columns:210px minmax(0,1fr);gap:28px;margin-top:18px}
+.shell.solo{display:block}
+.content .h1{margin-top:0}
+#side{display:flex;flex-direction:column;gap:2px;padding-right:18px;border-right:1px solid var(--line);align-self:start}
+#side button{background:none;border:0;border-radius:7px;padding:8px 10px;text-align:left;font-weight:500;color:var(--muted)}
+#side button:hover{color:var(--ink)}
+#side button[aria-pressed="true"]{background:var(--acc-soft);color:var(--ink);font-weight:600;box-shadow:inset 3px 0 0 var(--acc)}
+.pid{display:flex;gap:10px;align-items:center;margin-bottom:14px}
+.pid strong{display:block;line-height:1.2;overflow-wrap:anywhere}
+.avatar{width:36px;height:36px;border-radius:8px;background:var(--acc);color:var(--surface);display:grid;place-items:center;font:700 14px "Bricolage Grotesque",sans-serif;flex:none}
+@media (max-width:800px){.shell{display:block}#side{flex-direction:row;flex-wrap:wrap;border-right:0;border-bottom:1px solid var(--line);padding:0 0 10px;margin-bottom:14px}.pid{width:100%;margin-bottom:6px}}
+.key{font-size:12.5px;color:var(--muted);font-weight:600;white-space:nowrap}
+.who{width:24px;height:24px;border-radius:50%;background:var(--acc);color:var(--surface);display:inline-grid;place-items:center;font-size:11px;font-weight:700;flex:none}
+.who.none{background:none;border:1.5px dashed var(--line)}
+.cm{border-top:1px solid var(--line);padding:8px 0;font-size:14px}
+.cm p{margin:2px 0 0;white-space:pre-wrap;overflow-wrap:anywhere}
+#cmNew{margin-top:6px}
+.row.late,.card.late{box-shadow:inset 4px 0 0 var(--warn)}
+.due{font-size:12.5px;color:var(--muted);white-space:nowrap}
+.due.late{color:var(--surface);background:var(--warn);padding:1px 7px;border-radius:4px;font-weight:600}
+.stsel{font-size:13px;border:1px solid var(--line);border-radius:999px;background:var(--surface);padding:4px 6px;max-width:130px}
+.stsel.st-done{color:var(--ok);border-color:var(--ok)}
+.stsel.st-doing,.stsel.st-review{border-color:var(--acc)}
+.card .m{flex-wrap:wrap}
+.newp input[type=date],#panel input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+.wrapseg{display:flex;flex-wrap:wrap}
+.fc3{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.fcbox{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
+.fcbox b{display:block;font:700 22px/1.15 "Bricolage Grotesque",sans-serif}
+.fcbox span{font-size:13px;color:var(--muted)}
+.fcbox.main{border-color:var(--acc);background:var(--acc-soft)}
+@media (max-width:560px){.fc3{grid-template-columns:1fr}}
+.hist{display:flex;align-items:flex-end;gap:3px;height:130px;padding:8px 0 0;border-bottom:1px solid var(--line)}
+.hist i{flex:1;min-width:6px;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85}
+.hist i.lt{background:var(--warn)}
+.hlab{display:flex;justify-content:space-between;font-size:12.5px;color:var(--muted);margin:4px 0 14px}
+.pill{font-size:13px;font-weight:600;padding:2px 9px;border-radius:999px;background:var(--acc-soft);white-space:nowrap}
+.pill.bad{background:var(--warn);color:var(--surface)}
+.pill.mid{background:color-mix(in srgb,var(--warn) 22%,var(--surface))}
+.rk3{display:flex;flex-wrap:wrap;gap:6px;margin:4px 0 6px}
+.rk3 span{font-size:13px;padding:2px 9px;border-radius:6px;border:1px solid var(--line)}
+.rk3 span.hi{border-color:var(--acc);background:var(--acc-soft);font-weight:600}
+.rk3 span.lo{border-color:var(--warn);color:var(--warn);font-weight:600}
+.fin{display:flex;gap:10px;align-items:end;flex-wrap:wrap;margin:0 0 12px}
+.fin label{font-size:12.5px;font-weight:600;color:var(--muted)}
+.fin input{display:block;width:90px;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 8px;margin-top:3px}
+.tpick{display:grid;grid-template-columns:repeat(auto-fit,minmax(230px,1fr));gap:12px;margin-bottom:12px}
+.tgrp>.small{display:block;font-weight:600;margin-bottom:6px}
+.tbtns{display:flex;flex-wrap:wrap;gap:6px}
+.tbtn{background:var(--surface);border:1px solid var(--line);border-radius:9px;padding:7px 11px;text-align:left;display:flex;flex-direction:column;gap:1px}
+.tbtn b{font-size:14px}.tbtn span{font-size:12px;color:var(--muted)}
+.tbtn:hover{border-color:var(--muted)}
+.tbtn[aria-pressed="true"]{border-color:var(--acc);background:var(--acc-soft);box-shadow:inset 0 -3px 0 var(--acc)}
+.how{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:8px 14px;margin-bottom:12px;font-size:14px}
+.how summary{cursor:pointer;font-weight:600;color:var(--acc)}
+.how p{margin:8px 0 0;color:var(--muted)}
+.insight{border-left:5px solid var(--acc);background:var(--acc-soft);border-radius:8px;padding:12px 14px;margin:0 0 14px;font-size:15px}
+.insight.warn{border-left-color:var(--warn);background:color-mix(in srgb,var(--warn) 12%,var(--surface))}
+.insight.ok{border-left-color:var(--ok);background:color-mix(in srgb,var(--ok) 12%,var(--surface))}
+.stack{display:flex;height:14px;border-radius:7px;overflow:hidden;background:var(--sunk)}
+.stack i{display:block;height:100%}
+.slegend{display:flex;flex-wrap:wrap;gap:4px 16px;font-size:13px;color:var(--muted);margin:6px 0 14px}
+.slegend i{display:inline-block;width:10px;height:10px;border-radius:2px;margin-right:5px;vertical-align:-1px}
+.eq{font-size:13px;color:var(--muted);margin:0}
+.mv2{font-size:12.5px;font-weight:700}.mv2.up{color:var(--ok)}.mv2.dn{color:var(--warn)}
+.ctl{display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:14px;margin-top:12px;padding-top:12px;border-top:1px solid var(--line)}
+.sl label,.sl .lab{display:block;font-size:13px;font-weight:600;color:var(--muted);margin-bottom:5px}
+.sl input[type=range]{width:100%;accent-color:var(--acc)}
+.sl input[type=number],.sl input[type=date]{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+.sl output{font-weight:600;font-size:14px}
+.sl .seg{flex-wrap:wrap}
+.trks{display:grid;gap:7px;margin-top:6px}
+.trk{display:grid;grid-template-columns:62px 1fr 46px;gap:10px;align-items:center;font-size:13px}
+.trk .ends{display:flex;justify-content:space-between}
+.trk .line{position:relative;height:6px;border-radius:3px;background:var(--sunk)}
+.trk .line i{position:absolute;top:50%;width:14px;height:14px;margin:-7px 0 0 -7px;border-radius:50%;background:var(--muted);border:2px solid var(--surface)}
+.trk .line i.hi{background:var(--acc)}.trk .line i.lo{background:var(--warn)}
+.fixes{display:flex;flex-wrap:wrap;gap:6px}
+.fcwrap{display:grid;grid-template-columns:280px minmax(0,1fr);gap:18px;align-items:start}
+@media (max-width:800px){.fcwrap{grid-template-columns:1fr}}
+.fcctl{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:16px}
+.fcctl h4{margin:0}
+.ck{display:flex;gap:8px;align-items:center;font-size:14px;padding:4px 0;cursor:pointer}
+.ck span:nth-child(2){flex:1}
+.fchead{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;margin-bottom:12px}
+.fchead>div{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px}
+.fchead>div.main{border-color:var(--acc);background:var(--acc-soft)}
+.fchead b{display:block;font:700 24px/1.15 "Bricolage Grotesque",sans-serif;margin-top:2px}
+@media (max-width:560px){.fchead{grid-template-columns:1fr}}
+.hist .bar{flex:1;min-width:6px;border:0;padding:0;background:var(--acc);border-radius:3px 3px 0 0;opacity:.85;cursor:pointer}
+.hist .bar:hover{opacity:1}
+.hist .bar.lt{background:var(--warn)}
+.hist .bar.sel{outline:2px solid var(--ink);outline-offset:1px}
+.lg{display:inline-block;width:10px;height:10px;border-radius:2px;background:var(--acc);vertical-align:-1px}.lg.lt{background:var(--warn)}
+.confl{margin:0 0 12px}
+.pill.c0{background:var(--warn);color:var(--surface)}
+.pill.c1{background:color-mix(in srgb,var(--warn) 22%,var(--surface))}
+.pill.c2{background:color-mix(in srgb,var(--ok) 22%,var(--surface))}
+.dv3{display:grid;grid-template-columns:repeat(auto-fit,minmax(210px,1fr));gap:10px;align-items:start}
+.dv{background:var(--surface);border:1px solid var(--line);border-top:4px solid var(--ok);border-radius:10px;padding:10px 12px}
+.dv.mid{border-top-color:color-mix(in srgb,var(--warn) 45%,var(--surface))}
+.dv.bad{border-top-color:var(--warn)}
+.dv summary{cursor:pointer;font-size:14px}
+.dv summary b{font:700 20px "Bricolage Grotesque",sans-serif;margin-right:2px}
+.erow{display:flex;flex-wrap:wrap;gap:6px 12px;align-items:center;padding:8px 0;border-top:1px solid var(--line)}
+.erow .t{flex:1;min-width:150px;background:none;border:0;padding:0;text-align:left;font-weight:600}
+.acard{background:var(--surface);border:1px solid var(--line);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.acard .hd{display:flex;gap:10px;align-items:center;flex-wrap:wrap;margin-bottom:8px}
+.acard .rk{font:700 20px "Bricolage Grotesque",sans-serif;color:var(--acc);min-width:26px}
+.acard .t{flex:1;min-width:150px;font-weight:600;background:none;border:0;padding:0;text-align:left}
+.sbar{height:6px;border-radius:3px;background:var(--sunk);overflow:hidden;margin-bottom:10px}
+.sbar i{display:block;height:100%;background:var(--acc)}
+.fld{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px}
+.fld label{font-size:12px;font-weight:600;color:var(--muted);display:block}
+.fld input,.fld select,.lvl textarea,.lane input,.mission textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:6px 8px;margin-top:3px}
+@media (max-width:560px){.fld{grid-template-columns:1fr 1fr}}
+.lvl,.lane{padding:10px 14px;border-top:1px solid var(--line)}
+.lvl .kind,.mission .kind{display:block;margin-bottom:2px}
+.mission{background:var(--surface);border:1px solid var(--line);border-left:5px solid var(--acc);border-radius:10px;padding:12px 14px;margin-bottom:14px}
+.tac{display:flex;gap:8px;align-items:center;padding:6px 0;font-size:14px;background:none;border:0;width:100%;text-align:left}
+.flow{display:flex;flex-wrap:wrap;gap:6px;align-items:center;margin:6px 0 8px}
+.step{border:1px solid var(--line);border-radius:7px;padding:6px 10px;font-size:14px;background:var(--bg);display:inline-flex;gap:8px;align-items:center;text-align:left}
+button.step{border-color:var(--acc)}
+button.step.done{background:var(--acc-soft)}
+.step .x{background:none;border:0;padding:0 2px;color:var(--muted);font-size:17px;line-height:1}
+.arr{color:var(--muted)}
+.jb{border:1px dashed var(--acc);border-radius:10px;padding:12px 14px;margin:10px 0 14px;background:var(--acc-soft);font-size:14px}
+a.btn{text-decoration:none;display:inline-block}
+#as .cr{display:inline-block;padding:6px 10px;margin:8px 0 0}
+body[data-role="member"] :is([data-act="addEpic"],[data-act="addStory"],[data-act="addFeat"],[data-act="crNew"],[data-act="crOk"],[data-act="crNo"],[data-act="lock"],[data-act="create"],[data-act="newProd"],[data-act="newProj"],[data-act="delProd"],[data-act="delProj"],[data-act="del"],[data-act="reset"],[data-act="startSprint"],[data-act="completeSprint"],[data-act="acAdd"],[data-act="acDel"],[data-act="asisAdd"],[data-act="asisDel"],[data-act="team"],.mv,.cr){display:none}
+body[data-role="member"] #as .cr{display:inline-block}
+body[data-role="member"] #side button[data-v="settings"]{display:none}
+body[data-role="member"] .gate input{pointer-events:none}
+@media (max-width:800px){
+  .wrap{padding:14px 14px 96px}
+  #side{position:fixed;left:0;right:0;bottom:0;z-index:15;background:var(--surface);border-top:1px solid var(--line);border-bottom:0;margin:0;padding:6px 6px calc(6px + env(safe-area-inset-bottom,0px));flex-wrap:nowrap;gap:2px}
+  #side .pid{display:none}
+  #side button{flex:1;text-align:center;font-size:12.5px;padding:10px 2px}
+  #side button[aria-pressed="true"]{box-shadow:inset 0 3px 0 var(--acc)}
+  #toast{bottom:calc(84px + env(safe-area-inset-bottom,0px))}
+  .scroll{scroll-snap-type:x mandatory}
+  .cols{min-width:0;grid-template-columns:none!important;grid-auto-flow:column;grid-auto-columns:84%}
+  .col{scroll-snap-align:start}
+  .btn,.seg button{min-height:40px}
+  .btn.sm{min-height:34px}
+  .mv button{width:32px;height:32px}
+  .stsel{padding:7px 8px}
+  #stats{gap:6px 20px}
+}
+.tag{font-size:12px;font-weight:600;padding:1px 7px;border-radius:4px;border:1px solid var(--line);color:var(--muted);white-space:nowrap}
+.tag.bug{color:var(--warn);border-color:var(--warn)}
+.tag.ep{background:var(--acc-soft);border-color:transparent;color:var(--ink);max-width:170px;overflow:hidden;text-overflow:ellipsis}
+.epic.over{outline:2px dashed var(--acc);outline-offset:-2px}
+.newp select{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px 10px}
+
+
+
+/* controls */
+.bar{display:flex;flex-wrap:wrap;gap:10px;align-items:center;margin-bottom:14px}
+.bar .grow{flex:1}
+.seg{display:inline-flex;border:1px solid var(--line);border-radius:8px;overflow:hidden;background:var(--surface)}
+.seg button{background:none;border:0;padding:6px 12px;font-size:14px;color:var(--muted)}
+.seg button+button{border-left:1px solid var(--line)}
+.seg button[aria-pressed="true"]{background:var(--acc-soft);color:var(--ink);font-weight:600}
+.btn{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:6px 12px;font-size:14px;font-weight:500}
+.btn:hover{border-color:var(--muted)}
+.btn.pri{background:var(--acc);border-color:var(--acc);color:var(--surface)}
+.btn.sm{padding:3px 9px;font-size:13px}
+.hint{color:var(--muted);font-size:14px;margin:0 0 12px;max-width:70ch}
+
+/* backlog */
+.epic{background:var(--surface);border:1px solid var(--line);border-radius:10px;margin-bottom:14px;overflow:hidden}
+.epic-h{display:flex;flex-wrap:wrap;align-items:center;gap:8px 12px;padding:12px 14px;border-left:5px solid var(--acc)}
+.epic-h h3{margin:0;font:700 19px/1.2 "Bricolage Grotesque",sans-serif;flex:1;min-width:180px}
+.epic-h h3 button{background:none;border:0;padding:0;font:inherit;text-align:left}
+.kind{font-size:12.5px;font-weight:600;color:var(--acc)}
+.meter{width:90px;height:6px;border-radius:3px;background:var(--sunk);overflow:hidden}
+.meter i{display:block;height:100%;background:var(--acc)}
+.small{font-size:13px;color:var(--muted)}
+.feat{display:flex;align-items:center;gap:10px;padding:7px 14px 7px 19px;background:var(--sunk);border-top:1px solid var(--line);font-weight:600;font-size:14px}
+.feat button.t{background:none;border:0;padding:0;font:inherit;flex:1;text-align:left}
+.row{display:flex;align-items:center;gap:10px;padding:9px 14px 9px 19px;border-top:1px solid var(--line);cursor:pointer}
+.row:hover{background:var(--acc-soft)}
+.row .t{flex:1;min-width:150px}
+.row .t small{display:block;color:var(--warn);font-size:12.5px}
+.mv{display:flex;gap:2px}
+.mv button{width:24px;height:24px;border:1px solid var(--line);border-radius:5px;background:var(--surface);padding:0;font-size:12px;line-height:1;color:var(--muted)}
+.chip{font-size:13px;font-weight:600;padding:2px 8px;border-radius:5px;background:var(--acc-soft);min-width:52px;text-align:center}
+.pts{width:30px;height:24px;display:grid;place-items:center;border:1px solid var(--line);border-radius:12px;font-size:13px;font-weight:600}
+.st{font-size:13px;width:86px;color:var(--muted)}
+.st::before{content:"";display:inline-block;width:8px;height:8px;border-radius:50%;margin-right:6px;border:1.5px solid var(--muted)}
+.st-doing::before{background:var(--acc);border-color:var(--acc)}
+.st-review::before{background:linear-gradient(90deg,var(--acc) 50%,transparent 50%);border-color:var(--acc)}
+.st-done{color:var(--ok)}.st-done::before{background:var(--ok);border-color:var(--ok)}
+.sp{font-size:13px;color:var(--muted);width:118px}
+.empty{padding:14px 19px;border-top:1px solid var(--line);color:var(--muted);font-size:14px}
+@media (max-width:640px){.row{flex-wrap:wrap}.row .t{flex-basis:calc(100% - 70px)}.sp{width:auto}}
+
+.cr{border:1px dashed var(--acc);border-radius:10px;padding:12px 14px;margin-bottom:14px;background:var(--acc-soft)}
+.cr h4{margin:0 0 8px;font-size:15px}
+.cr-row{display:flex;flex-wrap:wrap;gap:8px;align-items:center;padding:6px 0;border-top:1px solid var(--line);font-size:14px}
+.cr-row span{flex:1;min-width:160px}
+.cr input{flex:1;min-width:180px}
+
+/* boards */
+.scroll{overflow-x:auto;padding-bottom:6px}
+.cols{display:grid;gap:10px;min-width:720px}
+.col{background:var(--sunk);border-radius:10px;padding:10px;min-height:140px}
+.col.over,.cell.over,.strip.over{outline:2px dashed var(--acc);outline-offset:-2px}
+.col h4{margin:0 0 8px;font-size:14px;display:flex;justify-content:space-between;gap:8px}
+.col h4 em{font-style:normal;color:var(--muted);font-weight:400}
+.gate{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--muted);margin:0 0 10px}
+.card{background:var(--surface);border:1px solid var(--line);border-radius:7px;padding:8px 10px;margin-bottom:8px;font-size:14px;cursor:grab;display:block;width:100%;text-align:left}
+.card:hover{border-color:var(--acc)}
+.card .m{display:flex;gap:8px;align-items:center;margin-top:6px;font-size:12.5px;color:var(--muted)}
+.card .risk{color:var(--warn);font-weight:600}
+.grid{display:grid;grid-template-columns:86px repeat(4,minmax(170px,1fr));gap:8px;min-width:800px}
+.grid .hd{font-size:14px;font-weight:600;padding:4px 2px}
+.grid .tm{font:700 16px "Bricolage Grotesque",sans-serif;padding-top:10px}
+.cell{background:var(--sunk);border-radius:8px;padding:8px;min-height:92px}
+.cell .load{font-size:12.5px;color:var(--muted);margin-bottom:6px}
+.cell .load.bad{color:var(--warn);font-weight:600}
+.strip{background:var(--sunk);border-radius:8px;padding:10px;margin-top:12px}
+.strip .cards{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:8px}
+.strip .card{margin:0}
+h2.sub{font:700 18px "Bricolage Grotesque",sans-serif;margin:22px 0 10px}
+
+/* roadmap */
+.tl{min-width:720px}
+.tl-h,.tl-r{display:grid;grid-template-columns:repeat(6,1fr)}
+.tl-h div{font-size:13px;font-weight:600;color:var(--muted);padding:4px 8px;border-left:1px solid var(--line)}
+.tl-pi div{background:var(--acc-soft);color:var(--ink)}
+.tl-r{padding:7px 0;background:repeating-linear-gradient(90deg,var(--line) 0 1px,transparent 1px calc(100%/6))}
+.tbar{position:relative;background:var(--surface);border:1px solid var(--acc);border-radius:7px;padding:8px 10px;text-align:left;overflow:hidden;margin:0 4px}
+.tbar i{position:absolute;inset:0 auto 0 0;background:var(--acc-soft)}
+.tbar span,.tbar em{position:relative;display:block}
+.tbar span{font-weight:600}.tbar em{font-style:normal;font-size:12.5px;color:var(--muted)}
+
+/* panel */
+#panel{position:fixed;top:0;right:0;bottom:0;width:min(440px,100%);background:var(--surface);border-left:1px solid var(--line);box-shadow:-12px 0 40px rgba(10,20,18,.18);padding:calc(18px + env(safe-area-inset-top,0px)) 20px calc(24px + env(safe-area-inset-bottom,0px));overflow-y:auto;z-index:20;transform:translateX(100%);transition:transform .18s ease;visibility:hidden}
+#panel.open{transform:none;visibility:visible}
+@media (prefers-reduced-motion:reduce){#panel{transition:none}}
+#panel .ph{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+#panel label{display:block;font-size:13px;font-weight:600;color:var(--muted);margin:12px 0 4px}
+#panel input[type=text],#panel input[type=number],#panel select,#panel textarea,.cr input{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:7px 9px}
+#panel .title{font:700 20px/1.25 "Bricolage Grotesque",sans-serif}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.three{display:grid;grid-template-columns:1fr 1fr 1fr;gap:10px}
+.ac{display:flex;gap:8px;align-items:flex-start;padding:5px 0;font-size:14px}
+.ac span{flex:1}.ac.done span{text-decoration:line-through;color:var(--muted)}
+.acadd{display:flex;gap:8px;margin-top:6px}
+.note{font-size:13px;color:var(--muted);margin-top:6px}
+.danger{color:var(--warn);border-color:var(--line);margin-top:22px}
+#toast{position:fixed;left:50%;bottom:calc(20px + env(safe-area-inset-bottom,0px));transform:translateX(-50%);background:var(--ink);color:var(--bg);padding:10px 16px;border-radius:8px;font-size:14px;max-width:90vw;z-index:30;opacity:0;pointer-events:none;transition:opacity .15s}
+#toast.on{opacity:1}
+</style>
+</head>
+<body data-m="agile">
+<div class="wrap">
+  <div class="top">
+    <span id="crumb"></span>
+    <span class="tr"><button class="link" data-act="team">Team</button><button class="link" data-act="reset">Restore sample</button><button class="btn pri" id="create" data-act="create">Create</button></span>
+  </div>
+  <p id="net" class="small" style="margin:8px 0 0"></p><div id="as" class="small"></div><div class="shell"><nav id="side" aria-label="Project"></nav><div class="content"><div id="head"></div>
+  <p id="blurb"></p>
+  <div id="stats"></div>
+  
+  <main id="main"></main></div></div>
+</div>
+<aside id="panel" aria-label="Item details"></aside>
+<div id="toast" role="status"></div>
+
+<script>
+const PH=['Requirements','Design','Build','Test','Release'];
+const TEAMS=['Atlas','Birch','Comet'];
+const ST={todo:'To do',doing:'In progress',review:'In review',done:'Done'};
+const MONTHS=['Nov','Dec','Jan','Feb','Mar','Apr'];
+const HZ={now:'Now',next:'Next',later:'Later'};
+const MOS={'Must':4,'Should':3,'Could':2,'Won’t':1};
+const CAP=24;
+const M={
+  agile:{name:'Agile',epic:'Epic',story:'User story',feat:0,score:'rice',est:'Story points',
+    blurb:'Stories are ranked in one backlog and pulled into two-week sprints. Nothing is frozen, so priorities can change before every sprint.'},
+  waterfall:{name:'Waterfall',epic:'Requirement',story:'Work package',feat:0,score:'moscow',est:'Effort (days)',
+    blurb:'Requirements are baselined up front and move through five phases. Each phase ends with a gate that must be signed, and new scope needs a change request.'},
+  hybrid:{name:'Hybrid',epic:'Requirement',story:'User story',feat:0,score:'moscow',est:'Story points',
+    blurb:'Requirements are baselined and pass phase gates, as in Waterfall. The stories inside a requirement stay flexible and are delivered in sprints once it reaches Build.'},
+  scaled:{name:'Scaled',epic:'Epic',story:'Story',feat:1,score:'wsjf',est:'Story points',
+    blurb:'Three teams plan a program increment together. Features sit between epics and stories, and dependencies between teams are checked against the sprint plan.'}
+};
+
+function seed(){
+  const st=(id,parent,title,asA,iWant,soThat,ac,pts,status,sprint,team,moscow,reach,impact,conf,bv,tc,rr,dep)=>
+    ({id,type:'story',parent,title,asA,iWant,soThat,ac:ac.map(a=>({t:a[0],d:!!a[1]})),pts,status,sprint,team,moscow,reach,impact,conf,bv,tc,rr,dep:dep||''});
+  const P={id:'sample',loaded:true,product:'gb',name:'Version 1 launch',key:'GBX',closed:[1],group:'sprint',m:'agile',view:'backlog',score:'rice',sort:'rank',sprint:2,locked:true,gates:[true,true,true,false,false],crs:[],crForm:null,sel:null,seq:30,items:[
+    {id:'E1',type:'epic',title:'Sign-up and onboarding',phase:3,start:0,len:2,horizon:'now'},
+    {id:'E2',type:'epic',title:'Weekly menu and ordering',phase:2,start:0,len:3,horizon:'now'},
+    {id:'E3',type:'epic',title:'Checkout and payments',phase:2,start:1,len:3,horizon:'next'},
+    {id:'E4',type:'epic',title:'Delivery tracking',phase:1,start:3,len:3,horizon:'later'},
+    {id:'F1',type:'feature',parent:'E1',title:'Account creation'},
+    {id:'F2',type:'feature',parent:'E1',title:'Taste profile'},
+    {id:'F3',type:'feature',parent:'E2',title:'Menu browsing'},
+    {id:'F4',type:'feature',parent:'E2',title:'Box builder'},
+    {id:'F5',type:'feature',parent:'E3',title:'Card payments'},
+    {id:'F6',type:'feature',parent:'E3',title:'Promo codes'},
+    {id:'F7',type:'feature',parent:'E4',title:'Live courier updates'},
+    st('S1','F1','Sign up with email','new customer','to create an account with my email address','I can start ordering',[['Email format is checked before submitting',1],['A confirmation email arrives within a minute',1]],3,'done',1,'Atlas','Must',4000,2,90,8,5,3),
+    st('S2','F1','Sign in with Google','returning customer','to sign in with my Google account','I don’t need another password',[['Google sign-in works on web and mobile',1]],2,'done',1,'Atlas','Should',2500,1,80,5,3,2),
+    st('S3','F2','Pick dietary preferences','new customer','to tell Greenbox what I don’t eat','I only see recipes that suit me',[['Vegetarian, vegan, gluten-free and nut-free can be selected',1],['Preferences can be changed later in settings',0]],5,'review',2,'Atlas','Must',3500,2,80,8,5,5),
+    st('S4','F2','Skip onboarding and browse first','curious visitor','to look at the menu before answering questions','I can decide if Greenbox is for me',[['A “Skip for now” option is on every onboarding step',0]],2,'todo',2,'Atlas','Could',1200,1,50,3,2,1),
+    st('S5','F3','Browse this week’s menu','customer','to see every recipe available this week','I can plan my meals',[['Each recipe shows a photo, cooking time and calories',1],['The menu loads in under two seconds',1]],5,'done',1,'Birch','Must',4000,3,100,13,8,5),
+    st('S6','F3','Filter recipes by cooking time','busy customer','to filter recipes by how long they take','I can find quick dinners',[['Filters for under 20, 30 and 45 minutes',0]],3,'doing',2,'Birch','Should',2200,1,80,5,3,2),
+    st('S7','F4','Add recipes to my box','customer','to add recipes to this week’s box','they are delivered to me',[['The box holds between two and five recipes',1],['The running total updates as recipes are added',0]],8,'doing',2,'Birch','Must',3800,3,90,13,8,8),
+    st('S8','F4','Change servings per recipe','customer cooking for a family','to choose two or four servings per recipe','I get the right amount of food',[['Price updates when servings change',0]],3,'todo',3,'Birch','Should',1800,1,70,5,3,2),
+    st('S9','F5','Pay by card','customer','to pay for my box with a debit or credit card','my order is confirmed',[['Visa and Mastercard are accepted',0],['A failed payment explains what to do next',0]],8,'todo',3,'Comet','Must',3800,3,90,13,13,8,'S7'),
+    st('S10','F5','Save a card for next time','regular customer','to save my card','I don’t retype it every week',[['Only the last four digits are shown',0]],5,'todo',0,'Comet','Should',2600,2,70,8,5,3,'S9'),
+    st('S11','F6','Apply a promo code at checkout','new customer','to enter a promo code','I get my first-box discount',[['An expired code shows a clear message',0]],3,'todo',3,'Comet','Could',1500,1,60,5,8,2,'S9'),
+    st('S12','F7','See the courier on a map','customer waiting for a delivery','to see where my courier is','I know when to be home',[],13,'todo',0,'Comet','Could',2000,2,50,8,3,5),
+    st('S13','F7','Get a text when the box is ten minutes away','customer','a text message shortly before delivery','I can be at the door',[['The text is sent once, ten minutes before arrival',0]],5,'todo',0,'Atlas','Should',3000,2,70,8,5,3),
+    st('S14','F3','Mark recipes as favourites','customer','to save recipes I liked','I can order them again',[['Favourites appear at the top of the menu',0]],2,'todo',0,'Birch','Won’t',900,0.5,60,2,1,1)
+  ]};
+  P.items.forEach((it,i)=>{it.no=i+1;if(it.type==='story')it.kind='story';});const dd=n=>new Date(Date.now()+n*864e5-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+  const X={E1:{due:dd(-6),strategy:'Remove every optional step from sign-up and ask for preferences only once.'},E2:{due:dd(20),strategy:'Show the whole week on one screen and let people build a box in a few taps.',asis:['Customer emails the weekly order form','Staff type the order into a spreadsheet','Staff confirm the order by phone']},E3:{strategy:'Take payment inside the app through one trusted provider.',asis:['Customer receives an invoice by email','Customer pays by bank transfer','Staff match payments to orders by hand']},E4:{strategy:'Tell customers where their box is before they need to ask.'},S3:{due:dd(2)},S6:{due:dd(-5)},S7:{due:dd(9)}};
+  P.items.forEach(it=>{if(X[it.id])Object.assign(it,X[it.id]);});P.due=dd(37);P.mission='Let busy households order a week of fresh dinners in under five minutes.';
+  P.no=P.items.length+1;return P;
+}
+
+let DB={products:[],prod:null,projects:[],team:[],page:null,cur:null,form:false,confirm:null},S=null,OWNER=false,ACT=null,MODE='loading',RO=false,ME=null,USER=null,NAMES={},PEOPLE=[];
+M.agile.pick='Best when requirements will keep changing. Ranked backlog, sprints and RICE scoring.';
+M.waterfall.pick='Best when scope is fixed up front. Phases, signed gates and change requests.';
+M.hybrid.pick='Fixed requirements with flexible delivery. Phase gates plus sprints.';
+M.scaled.pick='Best for several teams on one product. Features, WSJF scoring and a program board.';
+function blank(name,m,key){return {id:'P'+Date.now(),loaded:true,product:DB.prod,name,key:key||'PRJ',closed:[],group:'sprint',no:1,m,view:'backlog',score:M[m].score,sort:'rank',sprint:1,locked:false,gates:[false,false,false,false,false],crs:[],crForm:null,sel:null,seq:1,items:[]};}
+function pick(id){S=DB.projects.find(p=>p.id===id)||null;DB.cur=S?S.id:null;DB.confirm=null;if(S){S.sel=null;S.crForm=null;S.creating=false;DB.prod=S.product;S.seq=Date.now()*100+Math.floor(Math.random()*100);S.no=Math.max(0,...S.items.map(i=>i.no||0))+1;}}
+function loadLocal(){
+DB.products=[{id:'gb',name:'Greenbox',desc:'Meal-kit delivery app for web and mobile'}];DB.projects=[seed()];
+try{const r=JSON.parse(localStorage.getItem('plotline-v2'));if(r&&Array.isArray(r.projects)){DB.projects=r.projects.filter(p=>p&&Array.isArray(p.items)&&M[p.m]);DB.cur=r.cur;if(Array.isArray(r.products))DB.products=r.products;DB.prod=r.prod||null;if(Array.isArray(r.team))DB.team=r.team;}}catch(e){}
+for(const p of DB.projects){if(p.id==='sample'&&!p.product)p.product='gb';}
+if(DB.projects.some(p=>!DB.products.find(x=>x.id===p.product))){
+  if(!DB.products.find(x=>x.id==='mine'))DB.products.push({id:'mine',name:'My product',desc:''});
+  for(const p of DB.projects){if(!DB.products.find(x=>x.id===p.product))p.product='mine';}
+}
+DB.projects.forEach(fix);pick(DB.cur);
+}
+function products(){
+  let h=importBanner()+joinBanner()+`<h1 class="h1">Products</h1><div class="bar"><span class="hint" style="margin:0">${!isMgr()?'You see the products and projects that contain work assigned to you.':DB.products.length?'A product holds one or more projects. Open a product to see them.':'No products yet. Create your first one.'}</span><span class="grow"></span><button class="btn pri" data-act="newProd">New product</button></div>`;
+  if(DB.form)h+=`<section class="newp"><label for="pd-name">Product name</label><input id="pd-name" type="text" placeholder="For example, Customer mobile app"><label for="pd-desc" style="margin-top:14px">What is it? (optional)</label><input id="pd-desc" type="text"><div class="bar" style="margin:16px 0 0"><button class="btn pri" data-act="createProd">Create product</button><button class="btn" data-act="cancelProj">Cancel</button></div></section>`;
+  DB.products.forEach(d=>{
+    const ps=DB.projects.filter(p=>p.product===d.id&&projVis(p));if(!isMgr()&&!ps.length)return;
+    h+=`<div class="prow"><button class="n" data-act="openProd" data-id="${d.id}">${esc(d.name)}</button>${d.desc?`<span class="small">${esc(d.desc)}</span>`:''}<span class="small">${ps.length} project${ps.length===1?'':'s'}${ps.length?' ('+[...new Set(ps.map(p=>M[p.m].name))].join(', ')+')':''}</span><button class="btn sm" data-act="openProd" data-id="${d.id}">Open</button><button class="btn sm" data-act="delProd" data-id="${d.id}">${DB.confirm===d.id?'Confirm: delete product and its '+ps.length+' project'+(ps.length===1?'':'s'):'Delete'}</button></div>`;
+  });
+  return h;
+}
+
+
+function fix(p){p.key=p.key||'PRJ';p.closed=p.closed||[];p.group=p.group||'sprint';if(!p.no){p.items.forEach((it,i)=>{it.no=i+1;});p.no=p.items.length+1;}p.items.forEach(it=>{if(it.type==='story'&&!it.kind)it.kind='story';});}
+const KINDS={story:'Story',bug:'Bug',task:'Task'};
+const ik=it=>S.key+'-'+it.no;
+const bySprint=()=>S.m!=='waterfall'&&S.group==='sprint';
+const autoKey=n=>{const w=n.toUpperCase().replace(/[^A-Z0-9 ]/g,'').split(/\s+/).filter(Boolean);return (w.length>1?w.map(x=>x[0]).join(''):(w[0]||'PRJ')).slice(0,4)||'PRJ';};
+function sprintBacklog(){
+  const all=stories();let h='';
+  const sec=n=>{
+    const l=all.filter(s=>(s.sprint||0)===n),act=n===S.sprint;
+    h+=`<section class="epic" data-for="story" data-set="sprint=${n}"><div class="epic-h"><h3>${n?'Sprint '+n:'Backlog'}</h3>${n?`<span class="kind">${act?'Active':'Planned'}</span>`:''}<span class="small">${l.length} issue${l.length===1?'':'s'}, ${pts(l)} pts${n?' of '+CAP:''}</span>${n?(act?'<button class="btn sm" data-act="completeSprint">Complete sprint</button>':`<button class="btn sm" data-act="startSprint" data-n="${n}">Start sprint</button>`):''}</div>${group(l)||`<div class="empty">${n?'Drag issues here from the backlog, or set the sprint on an issue.':'The backlog is empty. Select Create issue to add work.'}</div>`}</section>`;
+  };
+  [1,2,3,4].filter(n=>!S.closed.includes(n)).forEach(sec);sec(0);
+  if(S.closed.length)h+=`<p class="hint">${S.closed.length} completed sprint${S.closed.length===1?' is':'s are'} hidden. Their finished work still counts towards progress.</p>`;
+  return h;
+}
+function settings(){
+  return `<div class="newp" style="max-width:560px"><label for="pname">Project name</label><input id="pname" type="text" value="${esc(S.name)}"><label for="pkey" style="margin-top:14px">Key</label><input id="pkey" type="text" maxlength="5" value="${esc(S.key)}" style="max-width:220px"><p class="note">The key starts every issue number in this project.</p><label for="pdue" style="margin-top:14px">Project deadline</label><input id="pdue" type="date" value="${esc(S.due||'')}" style="max-width:220px"><label for="pm" style="margin-top:14px">Methodology</label><select id="pm">${opt(Object.keys(M).map(k=>[k,M[k].name]),S.m)}</select><p class="note">Changing the methodology keeps every issue. Only the terminology, views and rules change.</p></div>`;
+}
+function save(){
+  if(MODE==='loading')return;
+  try{localStorage.setItem('plotline-ui',JSON.stringify({cur:DB.cur,prod:DB.prod,prefs:DB.projects.reduce((a,p)=>{a[p.id]={view:p.view,score:p.score,sort:p.sort,group:p.group,tech:p.tech,fcSpeed:p.fcSpeed,fcSpread:p.fcSpread,fcLen:p.fcLen,fcMode:p.fcMode,fcGrow:p.fcGrow};return a;},{})}));}catch(e){}
+  if(MODE==='local'){try{localStorage.setItem('plotline-v2',JSON.stringify({products:DB.products,prod:DB.prod,projects:DB.projects,cur:DB.cur,team:DB.team}));}catch(e){}}
+  else{clearTimeout(PT);PT=setTimeout(push,500);}
+}
+
+/* ---------- shared workspace ---------- */
+let DBH=null,REMOTE={},CHAIN={},WROTE={},SUBS={},PT=0,LT=0,GOT={products:false,projects:false,team:false},PENDING=false,REQ={},UI={};
+try{UI=JSON.parse(localStorage.getItem('plotline-ui'))||{};}catch(e){}
+const GB={id:'gb',name:'Greenbox',desc:'Meal-kit delivery app for web and mobile'};
+const sj=o=>JSON.stringify(o,(k,v)=>v&&typeof v==='object'&&!Array.isArray(v)?Object.keys(v).sort().reduce((a,x)=>{a[x]=v[x];return a;},{}):v);
+const meId=()=>(ME&&ME.id)||'';
+const tm=id=>DB.team.find(t=>t.id===id);
+const nameOf=id=>!id?'':(tm(id)&&(tm(id).label||tm(id).email))||(id===meId()?(NAMES[id]||(ME&&ME.name)||'You'):(NAMES[id]||'Someone'));
+const initials=n=>n.split(/\s+/).filter(Boolean).slice(0,2).map(w=>w[0].toUpperCase()).join('')||'?';
+const who=id=>id?`<span class="who" title="Assigned to ${esc(nameOf(id))}">${esc(initials(nameOf(id)))}</span>`:'<span class="who none" title="Unassigned"></span>';
+function when(t){const d=(Date.now()-t)/60000;return d<1?'just now':d<60?Math.round(d)+' min ago':d<1440?Math.round(d/60)+' h ago':new Date(t).toLocaleDateString();}
+function lsData(){try{const r=JSON.parse(localStorage.getItem('plotline-v2'));return r&&Array.isArray(r.projects)?r:null;}catch(e){return null;}}
+function importBanner(){
+  if(MODE!=='shared'||RO)return '';
+  let n=0;try{if(localStorage.getItem('plotline-imported'))return '';}catch(e){return '';}
+  const r=lsData();if(r)n=r.projects.filter(p=>p&&Array.isArray(p.items)&&M[p.m]&&!DB.projects.find(x=>x.id===p.id)).length;
+  if(!n)return '';
+  return `<div class="cr"><div class="cr-row" style="border:0;padding:0"><span>This browser holds ${n} project${n===1?'':'s'} from before sharing was added.</span><button class="btn sm pri" data-act="importLocal">Move ${n===1?'it':'them'} into the shared workspace</button><button class="btn sm" data-act="importSkip">Dismiss</button></div></div>`;
+}
+function asgHtml(it){
+  const l=DB.team.map(t=>[t.id,nameOf(t.id)+(t.id===meId()?' (you)':'')]);if(meId()&&!myEntries().length)l.unshift([meId(),nameOf(meId())+' (you)']);
+  if(it.assignee&&!l.find(x=>x[0]===it.assignee))l.push([it.assignee,nameOf(it.assignee)]);
+  return `<div class="two"><div><label for="f-asg">Assignee</label><select id="f-asg" data-f="assignee">${opt([['','Unassigned']].concat(l),it.assignee||'')}</select></div><div><label>Reporter</label><p class="note" style="margin:8px 0 0">${esc(nameOf(it.reporter)||'Not recorded')}</p></div></div>${DB.team.length?'':'<p class="note">Add people in the Team section to assign work to them.</p>'}`;
+}
+function cmHtml(it){
+  return '<label for="cmNew">Comments</label>'+(it.comments||[]).map((c,i)=>`<div class="cm"><strong>${esc(nameOf(c.by)||'You')}</strong> <span class="small">${when(c.at)}</span>${c.by===meId()?` <button class="link" data-act="cmDel" data-i="${i}">Delete</button>`:''}<p>${esc(c.text)}</p></div>`).join('')+'<textarea id="cmNew" rows="2" placeholder="Add a comment"></textarea><button class="btn sm" style="margin-top:6px" data-act="cmAdd">Add comment</button>';
+}
+function localDocs(){
+  const m={};
+  DB.products.forEach(d=>{m['products/'+d.id]={name:d.name,desc:d.desc||''};});
+  DB.team.forEach(t=>{m['team/'+t.id]={role:t.role||'member',label:t.label||'',ph:!!t.ph};if(t.email)m['team/'+t.id].email=t.email;});
+  DB.projects.forEach(p=>{
+    if(p.loaded)p.order=p.items.map(i=>i.id);
+    m['projects/'+p.id]={product:p.product,name:p.name,key:p.key,m:p.m,sprint:p.sprint,closed:p.closed,locked:p.locked,gates:p.gates,crs:p.crs,order:p.order||[]};
+    if(p.due)m['projects/'+p.id].due=p.due;if(p.mission)m['projects/'+p.id].mission=p.mission;
+    if(p.loaded)p.items.forEach(i=>{m['projects/'+p.id+'/items/'+i.id]=i;});
+  });
+  return m;
+}
+function put(path,obj){
+  WROTE[path]=Date.now();
+  const run=()=>obj===null?DBH.doc(path).delete():DBH.doc(path).set(obj);
+  CHAIN[path]=(CHAIN[path]||Promise.resolve()).then(run).catch(e=>{
+    if(e&&e.code==='unavailable')return new Promise(r=>setTimeout(r,600+Math.random()*600)).then(run);
+    throw e;
+  }).catch(e=>{
+    delete REMOTE[path];
+    const c=e&&e.code;
+    if(c==='invalid_argument'||c==='revoked'||c==='not_granted'){if(!RO){RO=true;soft();}}
+    else toast('A change could not be saved'+(c?' ('+c+')':'')+'. It will be retried with your next edit.');
+  });
+}
+function push(){
+  if(MODE!=='shared'||!DBH||RO)return;
+  const loc=localDocs();
+  Object.keys(loc).forEach(path=>{const j=sj(loc[path]);if(REMOTE[path]!==j){REMOTE[path]=j;put(path,JSON.parse(j));}});
+  Object.keys(REMOTE).forEach(path=>{
+    if(path in loc)return;
+    const seg=path.split('/'),pr=seg.length===4&&DB.projects.find(p=>p.id===seg[1]);
+    if(pr&&!pr.loaded)return;
+    delete REMOTE[path];put(path,null);
+  });
+  ensureSubs();
+}
+function ensureSubs(){
+  if(!DBH)return;
+  DB.projects.forEach(p=>{if(!SUBS[p.id])SUBS[p.id]=DBH.collection('projects/'+p.id+'/items').onSnapshot(s=>onColl('projects/'+p.id+'/items',s),()=>{});});
+  Object.keys(SUBS).forEach(id=>{if(!DB.projects.find(p=>p.id===id)){try{SUBS[id]();}catch(e){}delete SUBS[id];}});
+}
+function sortItems(p){const o=p.order||[],ix=id=>{const i=o.indexOf(id);return i<0?1e9:i;};p.items.sort((a,b)=>ix(a.id)-ix(b.id));}
+function applyDoc(prefix,id,data,proj){
+  if(prefix==='team'){const t=tm(id);if(t){Object.assign(t,data);if(!('email' in data))t.email='';}else DB.team.push(Object.assign({id},data));}
+  else if(prefix==='products'){const d=DB.products.find(x=>x.id===id);if(d)Object.assign(d,data);else DB.products.push(Object.assign({id},data));}
+  else if(prefix==='projects'){
+    let p=DB.projects.find(x=>x.id===id);
+    if(!p){p=Object.assign({id,items:[],view:'backlog',sort:'rank',group:'sprint',score:(M[data.m]||M.agile).score,sel:null,crForm:null,creating:false,loaded:false,seq:1,no:1},(UI.prefs||{})[id]||{});DB.projects.push(p);}
+    Object.assign(p,data);
+    if(!('due' in data))p.due='';if(!('mission' in data))p.mission='';
+    if(!M[p.m])p.m='agile';
+    if(['backlog','board','roadmap','settings','analysis'].indexOf(p.view)<0)p.view='backlog';
+    p.closed=p.closed||[];p.gates=p.gates||[false,false,false,false,false];p.crs=p.crs||[];p.key=p.key||'PRJ';p.name=p.name||'';
+    sortItems(p);
+  }else{
+    const it=Object.assign({id},data),i=proj.items.findIndex(x=>x.id===id);
+    if(i>=0)proj.items[i]=it;else proj.items.push(it);
+  }
+}
+function removeDoc(prefix,id,proj){
+  if(prefix==='team'){DB.team=DB.team.filter(t=>t.id!==id);if(ACT===id)ACT=null;}
+  else if(prefix==='products'){DB.products=DB.products.filter(x=>x.id!==id);if(DB.prod===id&&!S)DB.prod=null;}
+  else if(prefix==='projects'){
+    if(S&&S.id===id)pick(null);
+    DB.projects=DB.projects.filter(x=>x.id!==id);
+    Object.keys(REMOTE).forEach(k=>{if(k.indexOf('projects/'+id+'/')===0)delete REMOTE[k];});
+  }else{proj.items=proj.items.filter(x=>x.id!==id);if(proj.sel===id)proj.sel=null;}
+}
+function onColl(prefix,snap){
+  if(MODE==='local')return;
+  const pid=prefix.split('/')[1],proj=pid?DB.projects.find(p=>p.id===pid):null;
+  if(pid&&!proj)return;
+  let ch=false;const seen={},cached=!!(snap.metadata&&snap.metadata.fromCache);
+  snap.docs.forEach(d=>{
+    const path=prefix+'/'+d.id;seen[path]=1;
+    const j=sj(d.data()||{});
+    if(REMOTE[path]===j)return;
+    REMOTE[path]=j;applyDoc(prefix,d.id,JSON.parse(j),proj);ch=true;
+  });
+  if(!cached)Object.keys(REMOTE).forEach(path=>{
+    if(path.slice(0,path.lastIndexOf('/'))!==prefix||seen[path]||Date.now()-(WROTE[path]||0)<5000)return;
+    delete REMOTE[path];removeDoc(prefix,path.slice(prefix.length+1),proj);ch=true;
+  });
+  if(proj){if(!cached&&!proj.loaded){proj.loaded=true;ch=true;}sortItems(proj);}
+  else if(!GOT[prefix]){GOT[prefix]=true;ch=true;}
+  if(prefix==='projects')ensureSubs();
+  if(MODE==='loading'&&GOT.products&&GOT.projects&&GOT.team){MODE='shared';clearTimeout(LT);pick(UI.cur);if(!S)DB.prod=UI.prod||null;ch=true;}
+  if(ch&&MODE==='shared')afterRemote();
+}
+function soft(){
+  const a=document.activeElement,ed=a&&/INPUT|TEXTAREA|SELECT/.test(a.tagName||'');
+  if(ed&&$('#main').contains(a)){PENDING=true;return;}
+  renderMain();if(!(ed&&$('#panel').contains(a)))renderPanel();
+}
+function afterRemote(){
+  if(S){S.no=Math.max(0,...S.items.map(i=>i.no||0))+1;if(S.sel&&!by(S.sel))S.sel=null;}
+  soft();
+}
+function loadPeople(){
+  if(!USER)return;
+  USER.search('').then(l=>{
+    const n=(l||[]).filter(p=>p&&p.id&&p.name).map(p=>({id:p.id,name:p.name}));
+    n.forEach(p=>{NAMES[p.id]=p.name;});
+    if(sj(n)!==sj(PEOPLE)){PEOPLE=n;if(MODE==='shared')soft();}
+  }).catch(()=>{});
+}
+function resolveNames(){
+  if(!USER)return;
+  const ids={};
+  DB.team.forEach(t=>{if(!t.ph&&!REQ[t.id])ids[t.id]=1;});
+  (S?S.items:[]).forEach(i=>{[i.assignee,i.reporter].concat((i.comments||[]).map(c=>c.by)).forEach(x=>{if(x&&!REQ[x])ids[x]=1;});});
+  const l=Object.keys(ids);if(!l.length)return;
+  l.forEach(x=>{REQ[x]=1;});
+  USER.profiles(l).then(ps=>{
+    let ch=false;
+    l.forEach(x=>{const n=ps&&ps[x]&&ps[x].name;if(n&&NAMES[x]!==n){NAMES[x]=n;ch=true;}});
+    if(ch)soft();
+  }).catch(()=>{});
+}
+function goLocal(){DBH=null;MODE='local';loadLocal();renderAll();}
+async function init(){
+  for(let i=0;i<(/claude/.test(location.hostname)?30:0)&&!(window.claude&&window.claude.use);i++)await new Promise(r=>setTimeout(r,100));
+  let db=null;
+  try{if(window.claude&&window.claude.use){db=await window.claude.use('db');USER=await window.claude.use('user');}}catch(e){}
+  if(!db){goLocal();return;}
+  DBH=db;
+  try{if(USER){ME=await USER.me();OWNER=!!(await USER.isOwner());EDIT=!!(await USER.canEdit());if((await USER.can('data.write'))===false)RO=true;loadPeople();}}catch(e){}
+  LT=setTimeout(()=>{if(MODE==='loading')goLocal();},10000);
+  const fail=()=>{if(MODE==='loading'){clearTimeout(LT);goLocal();}};
+  db.collection('products').onSnapshot(s=>onColl('products',s),fail);
+  db.collection('projects').onSnapshot(s=>onColl('projects',s),fail);
+  db.collection('team').onSnapshot(s=>onColl('team',s),fail);
+}
+document.addEventListener('focusout',()=>{if(PENDING){PENDING=false;setTimeout(soft,50);}});
+
+const $=q=>document.querySelector(q);
+const esc=s=>String(s==null?'':s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const lc=s=>s.toLowerCase();
+const pl=s=>lc(s).replace(/y$/,'ie')+'s';
+function home(){
+  const pr=DB.products.find(x=>x.id===DB.prod);
+  if(!pr)return products();
+  const mine=DB.projects.filter(p=>p.product===pr.id&&projVis(p));
+  let h=`<h1 class="h1">${esc(pr.name)}</h1>${pr.desc?`<p class="hint">${esc(pr.desc)}</p>`:''}<div class="bar"><span class="hint" style="margin:0">${mine.length?'Projects for this product. Open one to work on its backlog.':'This product has no projects yet. Create the first one.'}</span><span class="grow"></span><button class="btn pri" data-act="newProj">New project</button></div>`;
+  if(DB.form)h+=`<section class="newp"><label for="np-name">Project name</label><input id="np-name" type="text" placeholder="For example, Mobile app relaunch"><label for="np-key" style="margin-top:14px">Key</label><input id="np-key" type="text" maxlength="5" placeholder="Filled in from the name" style="max-width:220px"><label for="np-due" style="margin-top:14px">Deadline (optional)</label><input id="np-due" type="date" style="max-width:220px"><fieldset><legend>Which methodology will this project follow?</legend><div class="mgrid">${Object.keys(M).map(k=>`<label class="mopt" style="--acc:var(--a-${k})"><input type="radio" name="np-m" value="${k}"><div><b>${M[k].name}</b>${M[k].pick}</div></label>`).join('')}</div></fieldset><div class="bar" style="margin:0"><button class="btn pri" data-act="createProj">Create project</button><button class="btn" data-act="cancelProj">Cancel</button></div></section>`;
+  mine.forEach(p=>{
+    const st=p.items.filter(i=>i.type==='story'),d=st.filter(s=>s.status==='done').length;
+    h+=`<div class="prow" style="--acc:var(--a-${p.m})"><button class="n" data-act="openProj" data-id="${p.id}">${esc(p.name)||'Untitled project'}</button><span class="key">${esc(p.key)}</span><span class="kind">${M[p.m].name}</span>${p.due?`<span class="due${projLate(p)?' late':''}">${projLate(p)?'Overdue ':'Due '}${fmtD(p.due)}</span>`:''}<span class="small">${p.items.filter(i=>i.type==='epic').length} ${pl(M[p.m].epic)}, ${st.length} ${pl(M[p.m].story)}, ${d} done</span><button class="btn sm" data-act="openProj" data-id="${p.id}">Open</button><button class="btn sm" data-act="delProj" data-id="${p.id}">${DB.confirm===p.id?'Confirm delete':'Delete'}</button></div>`;
+  });
+  return h;
+}
+const cfg=()=>M[S.m];
+const by=id=>S.items.find(i=>i.id===id);
+const actId=()=>ACT||meId();
+const realMgr=()=>MODE==='local'||OWNER||(myEntries().length?myEntries().some(t=>t.role==='manager'):EDIT);
+const isMgr=()=>!ACT&&realMgr();
+const mine=i=>{if(!i.assignee)return false;if(ACT)return i.assignee===ACT;return i.assignee===meId()||myEntries().some(t=>t.id===i.assignee);};
+const vis=s=>isMgr()||mine(s)||mine(epicOf(s)||{});
+const projVis=p=>isMgr()||p.items.some(mine);
+const epics=()=>S.items.filter(i=>i.type==='epic'&&(isMgr()||mine(i)||S.items.some(s=>s.type==='story'&&mine(s)&&(epicOf(s)||{}).id===i.id)));
+const feats=e=>S.items.filter(i=>i.type==='feature'&&i.parent===e);
+const stories=()=>S.items.filter(i=>i.type==='story'&&vis(i));
+const storiesOf=e=>{const f=feats(e).map(x=>x.id);return stories().filter(s=>f.includes(s.parent));};
+const epicOf=s=>{const f=by(s.parent);return f?by(f.parent):null;};
+const pts=l=>l.reduce((a,s)=>a+(+s.pts||0),0);
+const ready=s=>s.title.trim()&&+s.pts>0&&s.ac.length>0;
+const gated=()=>S.m==='waterfall'||S.m==='hybrid';
+const hasSprints=()=>S.m!=='waterfall';
+const atRisk=s=>{if(!s.dep||!s.sprint)return false;const d=by(s.dep);return !!d&&d.status!=='done'&&(!d.sprint||d.sprint>=s.sprint);};
+function scoreNum(s){
+  const e=Math.max(+s.pts||1,1);
+  if(S.score==='rice')return (+s.reach||0)*(+s.impact||0)*(+s.conf||0)/100/e;
+  if(S.score==='wsjf')return ((+s.bv||0)+(+s.tc||0)+(+s.rr||0))/e;
+  return MOS[s.moscow]||0;
+}
+function scoreTxt(s){const n=scoreNum(s);return S.score==='rice'?Math.round(n):S.score==='wsjf'?n.toFixed(1):s.moscow;}
+function toast(t){const el=$('#toast');el.textContent=t;el.classList.add('on');clearTimeout(toast.t);toast.t=setTimeout(()=>el.classList.remove('on'),3600);}
+const seg=(k,opts,num)=>`<div class="seg" role="group">${opts.map(o=>`<button data-act="set" data-k="${k}" data-v="${o[0]}"${num?' data-n="1"':''} aria-pressed="${S[k]==o[0]}">${o[1]}</button>`).join('')}</div>`;
+const meter=l=>{const t=pts(l),d=pts(l.filter(s=>s.status==='done'));return `<span class="meter" title="${d} of ${t} done"><i style="width:${t?Math.round(d/t*100):0}%"></i></span>`;};
+
+/* ---------- stats ---------- */
+function stats(){
+  const all=stories(),cur=all.filter(s=>s.sprint===S.sprint),open=S.crs.filter(c=>c.state==='open').length;
+  const gatesTxt=`<div class="stat"><b>${S.gates.filter(Boolean).length}/5</b>phase gates signed</div>`;
+  const crTxt=`<div class="stat${open?' bad':''}"><b>${open}</b>open change request${open===1?'':'s'}</div>`;
+  const sprintTxt=S.sprint?`<div class="stat${pts(cur)>CAP?' bad':''}"><b>${pts(cur)}/${CAP}</b>points committed to Sprint ${S.sprint}</div>`:'<div class="stat"><b>None</b>active sprint</div>';
+  if(S.m==='agile'){
+    const un=all.filter(s=>!s.sprint);
+    return sprintTxt+`<div class="stat"><b>${pts(cur.filter(s=>s.status==='done'))}</b>points done this sprint</div>${S.closed.length?`<div class="stat"><b>${Math.round(S.closed.reduce((a,n)=>a+pts(all.filter(s=>s.sprint===n&&s.status==='done')),0)/S.closed.length)}</b>average velocity over completed sprints</div>`:''}<div class="stat"><b>${un.filter(ready).length}/${un.length}</b>unplanned stories are ready</div>`;
+  }
+  if(S.m==='waterfall'){
+    const es=epics(),done=es.filter(e=>{const l=storiesOf(e.id);return l.length&&l.every(s=>s.status==='done');}).length;
+    return `<div class="stat"><b>${done}/${es.length}</b>requirements complete</div>`+gatesTxt+crTxt+`<div class="stat"><b>${S.locked?'Locked':'Open'}</b>scope baseline</div>`;
+  }
+  if(S.m==='hybrid')return gatesTxt+sprintTxt+crTxt;
+  const risk=all.filter(atRisk).length;
+  return `<div class="stat"><b>${pts(all.filter(s=>s.sprint))}</b>points planned in this increment</div><div class="stat${risk?' bad':''}"><b>${risk}</b>dependenc${risk===1?'y':'ies'} at risk</div><div class="stat"><b>${all.filter(s=>!s.sprint).length}</b>stories not yet planned</div>`;
+}
+
+/* ---------- backlog ---------- */
+function row(s,i,n){
+  const c=cfg();
+  return `<div class="row${late(s)?' late':''}" draggable="true" role="button" tabindex="0" data-act="open" data-id="${s.id}">
+    ${S.sort==='rank'?`<span class="mv"><button data-act="up" data-id="${s.id}" aria-label="Move up"${i===0?' disabled':''}>▲</button><button data-act="down" data-id="${s.id}" aria-label="Move down"${i===n-1?' disabled':''}>▼</button></span>`:''}
+    <span class="key">${esc(ik(s))}</span>${s.kind&&s.kind!=='story'?`<span class="tag ${s.kind}">${KINDS[s.kind]}</span>`:''}<span class="t">${esc(s.title)||'Untitled'}${S.m!=='waterfall'&&!ready(s)?'<small>Needs refinement: add an estimate and acceptance criteria</small>':''}</span>
+    ${bySprint()?`<span class="tag ep">${esc((epicOf(s)||{}).title)}</span>`:''}<span class="chip" title="${S.score.toUpperCase()} score">${esc(scoreTxt(s))}</span>
+    <span class="pts" title="${c.est}">${+s.pts||'–'}</span>
+    ${dueTag(s)}${who(s.assignee)}<select class="stsel st-${s.status}" data-q="status" data-id="${s.id}" aria-label="Status">${opt(Object.entries(ST),s.status)}</select>
+    ${hasSprints()?`<span class="sp">${s.sprint?'Sprint '+s.sprint:'Not planned'}${c.feat?', '+esc(s.team):''}</span>`:''}
+  </div>`;
+}
+function group(list){
+  const l=S.sort==='score'?list.slice().sort((a,b)=>scoreNum(b)-scoreNum(a)):list;
+  return l.map((s,i)=>row(s,i,l.length)).join('');
+}
+function crBox(){
+  if(!gated()||(!S.crForm&&!S.crs.length))return '';
+  const c=cfg();let h='<div class="cr"><h4>Change requests</h4>';
+  if(S.crForm){
+    const f=S.crForm,what=f.kind==='epic'?lc(c.epic):lc(c.story)+' in “'+esc((by(f.epic)||{}).title)+'”';
+    h+=`<div class="cr-row"><input id="crTitle" type="text" placeholder="Name the new ${what}" aria-label="Change request title"><button class="btn pri sm" data-act="crRaise">Raise change request</button><button class="btn sm" data-act="crCancel">Cancel</button></div>`;
+  }
+  S.crs.forEach(r=>{
+    h+=`<div class="cr-row"><span><strong>${esc(r.title)}</strong> <span class="small">new ${r.kind==='epic'?lc(c.epic):lc(c.story)+' under “'+esc((by(r.epic)||{}).title||'removed')+'”'}</span></span>`+
+      (r.state==='open'?`<button class="btn sm" data-act="crOk" data-id="${r.id}">Approve</button><button class="btn sm" data-act="crNo" data-id="${r.id}">Reject</button>`:`<span class="small" style="flex:0">${r.state==='ok'?'Approved and added':'Rejected'}</span>`)+'</div>';
+  });
+  return h+'</div>';
+}
+function backlog(){
+  const c=cfg(),lockE=gated()&&S.locked,lockS=S.m==='waterfall'&&S.locked;
+  let h=`<div class="bar">${seg('score',[['rice','RICE'],['wsjf','WSJF'],['moscow','MoSCoW']])}${hasSprints()?seg('group',[['sprint','By sprint'],['epic','By '+lc(c.epic)]]):''}${seg('sort',[['rank','Manual rank'],['score','By score']])}<span class="grow"></span>
+    ${gated()?`<button class="btn" data-act="lock">${S.locked?'Unlock baseline':'Lock baseline'}</button>`:''}
+    <button class="btn pri" data-act="${lockE?'crNew':'addEpic'}" data-kind="epic">${lockE?'Request new ':'Add '}${lc(c.epic)}</button></div>`;
+  if(lockE)h+=`<p class="hint">The baseline is locked. ${S.m==='waterfall'?'New requirements and work packages':'New requirements'} go through a change request${S.m==='hybrid'?'; stories inside a requirement can still be added freely':''}.</p>`;
+  h+=crBox();
+  if(!epics().length)h+=`<div class="empty" style="border:1px dashed var(--line);border-radius:10px">This project has no ${pl(c.epic)} yet. Add the first ${lc(c.epic)} to start the backlog.</div>`;
+  if(bySprint())return h+(epics().length?sprintBacklog():'');
+  epics().forEach(e=>{
+    const l=storiesOf(e.id);
+    h+=`<section class="epic"><div class="epic-h"><span class="kind">${c.epic} ${esc(ik(e))}</span><h3><button data-act="open" data-id="${e.id}">${esc(e.title)||'Untitled'}</button></h3>
+      ${dueTag(e)}${who(e.assignee)}${gated()?`<span class="small">${PH[e.phase]} phase</span>`:''}${meter(l)}<span class="small">${pts(l.filter(s=>s.status==='done'))} of ${pts(l)} ${S.m==='waterfall'?'days':'pts'}</span>
+      ${c.feat?`<button class="btn sm" data-act="addFeat" data-epic="${e.id}">Add feature</button>`:`<button class="btn sm" data-act="${lockS?'crNew':'addStory'}" data-kind="story" data-epic="${e.id}">${lockS?'Request ':'Add '}${lc(c.story)}</button>`}</div>`;
+    if(c.feat){
+      const fs=feats(e.id).filter(f=>isMgr()||l.some(s=>s.parent===f.id));
+      fs.forEach(f=>{
+        const fl=l.filter(s=>s.parent===f.id);
+        h+=`<div class="feat"><span class="kind">Feature</span><button class="t" data-act="open" data-id="${f.id}">${esc(f.title)||'Untitled'}</button><button class="btn sm" data-act="addStory" data-epic="${e.id}" data-feat="${f.id}">Add story</button></div>`+(group(fl)||'<div class="empty">No stories yet. Add the first one to this feature.</div>');
+      });
+      if(!fs.length)h+='<div class="empty">No features yet. Add a feature, then break it into stories.</div>';
+    }else h+=group(l)||`<div class="empty">Nothing here yet. Add the first ${lc(c.story)}.</div>`;
+    h+='</section>';
+  });
+  return h;
+}
+
+/* ---------- boards ---------- */
+function card(s,extra){
+  const d=s.dep&&by(s.dep);
+  return `<div class="card${late(s)?' late':''}" role="button" tabindex="0" draggable="true" data-act="open" data-id="${s.id}">${esc(s.title)||'Untitled'}<span class="m"><span class="key">${esc(ik(s))}</span><span class="pts">${+s.pts||'–'}</span>${extra||''}${who(s.assignee)}${S.m==='scaled'&&d?`<span class="${atRisk(s)?'risk':''}">${atRisk(s)?'Blocked by':'Needs'} “${esc(d.title)}”</span>`:''}${dueTag(s)}</span><select class="stsel st-${s.status}" data-q="status" data-id="${s.id}" aria-label="Status" style="margin-top:8px">${opt(Object.entries(ST),s.status)}</select></div>`;
+}
+function sprintBoard(list){
+  const cur=list.filter(s=>s.sprint===S.sprint);
+  if(!S.sprint)return '<p class="hint">No sprint is active. Start a sprint from the backlog to see its board.</p>';
+  let h=`<div class="bar"><strong>Sprint ${S.sprint}</strong><span class="small">${pts(cur)} of ${CAP} points of capacity used</span><span class="grow"></span><button class="btn" data-act="completeSprint">Complete sprint</button></div>`;
+  if(!cur.length)h+=`<p class="hint">No stories in Sprint ${S.sprint} yet. Drag issues into it from the backlog.</p>`;
+  h+='<div class="scroll"><div class="cols" style="grid-template-columns:repeat(4,1fr)">';
+  Object.keys(ST).forEach(k=>{const l=cur.filter(s=>s.status===k);
+    h+=`<div class="col" data-for="story" data-set="status=${k}"><h4>${ST[k]}<em>${pts(l)} pts</em></h4>${l.map(s=>card(s,`<span>${esc((epicOf(s)||{}).title)}</span>`)).join('')}</div>`;});
+  return h+'</div></div><p class="hint" style="margin-top:10px">Drag a card to change its status, or select it to edit.</p>';
+}
+function phaseBoard(){
+  const c=cfg();
+  let h='<div class="scroll"><div class="cols" style="grid-template-columns:repeat(5,1fr)">';
+  PH.forEach((p,i)=>{
+    h+=`<div class="col" data-for="epic" data-set="phase=${i}"><h4>${p}</h4><label class="gate"><input type="checkbox" data-gate="${i}"${S.gates[i]?' checked':''}> Gate signed</label>`+
+      epics().filter(e=>e.phase===i).map(e=>{const l=storiesOf(e.id);return `<button class="card" draggable="true" data-act="open" data-id="${e.id}">${esc(e.title)}<span class="m">${meter(l)}<span>${l.filter(s=>s.status==='done').length} of ${l.length} ${pl(c.story)} done</span></span></button>`;}).join('')+'</div>';
+  });
+  return h+`</div></div><p class="hint" style="margin-top:10px">Drag a requirement to the next phase. It only moves once every earlier gate is signed.</p>`;
+}
+function programBoard(){
+  const all=stories();
+  let h='<div class="scroll"><div class="grid"><div></div>'+[1,2,3,4].map(n=>`<div class="hd">Sprint ${n}</div>`).join('');
+  TEAMS.forEach(t=>{
+    h+=`<div class="tm">${t}</div>`;
+    [1,2,3,4].forEach(n=>{const l=all.filter(s=>s.team===t&&s.sprint===n),p=pts(l);
+      h+=`<div class="cell" data-for="story" data-set="team=${t};sprint=${n}"><div class="load${p>10?' bad':''}">${p} of 10 pts${p>10?', over capacity':''}</div>${l.map(s=>card(s)).join('')}</div>`;});
+  });
+  const un=all.filter(s=>!s.sprint);
+  h+=`</div></div><div class="strip" data-for="story" data-set="sprint=0"><h4 style="margin:0 0 8px;font-size:14px">Not yet planned</h4><div class="cards">${un.map(s=>card(s,`<span>${esc(s.team)}</span>`)).join('')||'<span class="small">Every story has a sprint.</span>'}</div></div>
+  <p class="hint" style="margin-top:10px">Drag stories between teams and sprints. A dependency turns red when the story it needs is planned for the same sprint or later.</p>`;
+  return h;
+}
+function board(){
+  if(S.m==='agile')return sprintBoard(stories());
+  if(S.m==='waterfall')return phaseBoard();
+  if(S.m==='scaled')return programBoard();
+  return phaseBoard()+'<h2 class="sub">Sprint board for requirements in Build</h2>'+sprintBoard(stories().filter(s=>(epicOf(s)||{}).phase===2));
+}
+
+/* ---------- roadmap ---------- */
+function roadmap(){
+  if(S.m==='agile'){
+    let h='<div class="scroll"><div class="cols" style="grid-template-columns:repeat(3,1fr)">';
+    Object.keys(HZ).forEach(k=>{
+      h+=`<div class="col" data-for="epic" data-set="horizon=${k}"><h4>${HZ[k]}</h4>`+epics().filter(e=>e.horizon===k).map(e=>{const l=storiesOf(e.id);
+        return `<button class="card" draggable="true" data-act="open" data-id="${e.id}"><strong>${esc(e.title)}</strong><span class="m">${meter(l)}<span>${l.length} stories, ${pts(l)} pts</span></span></button>`;}).join('')+'</div>';
+    });
+    return h+'</div></div><p class="hint" style="margin-top:10px">An agile roadmap commits to an order, not to dates. Drag epics between columns as priorities change.</p>';
+  }
+  let h='<div class="scroll"><div class="tl">';
+  if(S.m==='scaled')h+='<div class="tl-h tl-pi"><div style="grid-column:span 3">Program increment 3</div><div style="grid-column:span 3">Program increment 4</div></div>';
+  h+='<div class="tl-h">'+MONTHS.map((m,i)=>`<div>${m} ${i<2?2026:2027}</div>`).join('')+'</div>';
+  epics().forEach(e=>{
+    const l=storiesOf(e.id),t=pts(l),d=pts(l.filter(s=>s.status==='done')),st=Math.min(+e.start||0,5),ln=Math.max(1,Math.min(+e.len||1,6-st));
+    h+=`<div class="tl-r"><button class="tbar" style="grid-column:${st+1}/span ${ln}" data-act="open" data-id="${e.id}"><i style="width:${t?Math.round(d/t*100):0}%"></i><span>${esc(e.title)}</span><em>${gated()?PH[e.phase]+' phase, ':''}${t?Math.round(d/t*100):0}% done</em></button></div>`;
+  });
+  return h+`</div></div><p class="hint" style="margin-top:10px">Select a bar to change its dates. The shaded part shows completed work.</p>`;
+}
+
+/* ---------- panel ---------- */
+const opt=(list,val)=>list.map(o=>{const v=Array.isArray(o)?o[0]:o,t=Array.isArray(o)?o[1]:o;return `<option value="${esc(v)}"${String(v)===String(val)?' selected':''}>${esc(t)}</option>`;}).join('');
+function renderPanel(){
+  const p=$('#panel'),it=S&&S.sel&&by(S.sel);
+  if(S&&S.creating){
+    const c=cfg();
+    p.innerHTML=`<div class="ph"><span class="kind">Create issue</span><button class="btn sm" data-act="close">Close</button></div><label for="c-type">Issue type</label><select id="c-type">${opt(S.m==='waterfall'?[['story',c.story],['epic',c.epic]]:[['story',c.story],['bug','Bug'],['task','Task'],['epic',c.epic]],'story')}</select><label for="c-title">Summary</label><input id="c-title" type="text"><label for="c-epic">Parent ${lc(c.epic)}</label><select id="c-epic">${opt(epics().map(e=>[e.id,e.title||'Untitled']),'')}</select><p class="note">The parent is only used for issues inside ${S.m==='agile'||S.m==='scaled'?'an':'a'} ${lc(c.epic)}.</p><button class="btn pri" style="margin-top:16px" data-act="createIssue">Create issue</button>`;
+    p.classList.add('open');return;
+  }
+  if(!it){p.classList.remove('open');p.innerHTML='';return;}
+  const c=cfg(),kind=it.type==='epic'?c.epic:it.type==='feature'?'Feature':it.kind&&it.kind!=='story'?KINDS[it.kind]:c.story;
+  let h=`<div class="ph"><span class="kind">${esc(ik(it))}, ${kind}</span><button class="btn sm" data-act="close">Close</button></div>
+    <label for="f-title">Title</label><input id="f-title" class="title" type="text" data-f="title" value="${esc(it.title)}">`;
+  if(it.type==='epic'){
+    if(gated())h+=`<label for="f-ph">Phase</label><select id="f-ph" data-f="phase" data-n="1">${opt(PH.map((x,i)=>[i,x]),it.phase)}</select>`;
+    if(S.m==='agile')h+=`<label for="f-hz">Roadmap horizon</label><select id="f-hz" data-f="horizon">${opt(Object.entries(HZ),it.horizon)}</select>`;
+    else h+=`<div class="two"><div><label for="f-st">Starts</label><select id="f-st" data-f="start" data-n="1">${opt(MONTHS.map((x,i)=>[i,x]),it.start)}</select></div><div><label for="f-ln">Length</label><select id="f-ln" data-f="len" data-n="1">${opt([1,2,3,4,5,6].map(n=>[n,n+(n===1?' month':' months')]),it.len)}</select></div></div>`;
+    h+=asgHtml(it)+dueHtml(it);
+    h+=`<p class="note">${storiesOf(it.id).length} ${pl(c.story)} belong to this ${lc(c.epic)}.</p>`;
+  }else if(it.type==='story'){
+    if(S.m!=='waterfall')h+=`<label for="f-kind">Issue type</label><select id="f-kind" data-f="kind">${opt([['story',c.story],['bug','Bug'],['task','Task']],it.kind)}</select>`;
+    if(S.m==='waterfall')h+=`<label for="f-want">Deliverable</label><textarea id="f-want" rows="3" data-f="iWant">${esc(it.iWant)}</textarea>`;
+    else h+=`<label for="f-as">As a</label><input id="f-as" type="text" data-f="asA" value="${esc(it.asA)}"><label for="f-want">I want</label><textarea id="f-want" rows="2" data-f="iWant">${esc(it.iWant)}</textarea><label for="f-so">So that</label><textarea id="f-so" rows="2" data-f="soThat">${esc(it.soThat)}</textarea>`;
+    h+=asgHtml(it)+dueHtml(it)+`<label>Acceptance criteria</label>`+(it.ac.map((a,i)=>`<div class="ac${a.d?' done':''}"><input type="checkbox" data-ac="${i}" aria-label="Met"${a.d?' checked':''}><span>${esc(a.t)}</span><button class="btn sm" data-act="acDel" data-i="${i}" aria-label="Remove criterion">Remove</button></div>`).join('')||'<p class="note">None yet. A story is ready once it has at least one.</p>')+
+      `<div class="acadd"><input id="acNew" type="text" placeholder="Given, when, then…" aria-label="New acceptance criterion"><button class="btn sm" data-act="acAdd">Add</button></div>
+      <div class="two"><div><label for="f-pts">${c.est}</label><select id="f-pts" data-f="pts" data-n="1">${opt([[0,'Not estimated'],1,2,3,5,8,13],it.pts)}</select></div>
+      <div><label for="f-stt">Status</label><select id="f-stt" data-f="status">${opt(Object.entries(ST),it.status)}</select></div></div>`;
+    if(hasSprints())h+=`<div class="two"><div><label for="f-spr">Sprint</label><select id="f-spr" data-f="sprint" data-n="1">${opt([[0,'Not planned'],[1,'Sprint 1'],[2,'Sprint 2'],[3,'Sprint 3'],[4,'Sprint 4']],it.sprint)}</select></div>
+      ${c.feat?`<div><label for="f-team">Team</label><select id="f-team" data-f="team">${opt(TEAMS,it.team)}</select></div>`:'<div></div>'}</div>`;
+    if(c.feat)h+=`<label for="f-dep">Depends on</label><select id="f-dep" data-f="dep">${opt([['','Nothing']].concat(stories().filter(s=>s.id!==it.id).map(s=>[s.id,s.title])),it.dep)}</select>`;
+    const pe=epicOf(it);
+    h+=`<label for="f-par">Belongs to</label><select id="f-par" data-f="parent">${opt(S.items.filter(i=>i.type==='feature').map(f=>[f.id,c.feat?(by(f.parent)||{}).title+' / '+f.title:(by(f.parent)||{}).title+(feats(f.parent).length>1?' / '+f.title:'')]),it.parent)}</select>`;
+    if(S.score==='rice')h+=`<div class="three"><div><label for="f-r">Reach</label><input id="f-r" type="number" min="0" data-f="reach" data-n="1" value="${+it.reach||0}"></div><div><label for="f-i">Impact</label><select id="f-i" data-f="impact" data-n="1">${opt([[0.5,'Low'],[1,'Medium'],[2,'High'],[3,'Massive']],it.impact)}</select></div><div><label for="f-c">Confidence %</label><input id="f-c" type="number" min="0" max="100" data-f="conf" data-n="1" value="${+it.conf||0}"></div></div><p class="note">RICE = reach × impact × confidence ÷ estimate.</p>`;
+    else if(S.score==='wsjf')h+=`<div class="three"><div><label for="f-bv">Business value</label><input id="f-bv" type="number" min="1" max="20" data-f="bv" data-n="1" value="${+it.bv||0}"></div><div><label for="f-tc">Time criticality</label><input id="f-tc" type="number" min="1" max="20" data-f="tc" data-n="1" value="${+it.tc||0}"></div><div><label for="f-rr">Risk reduction</label><input id="f-rr" type="number" min="1" max="20" data-f="rr" data-n="1" value="${+it.rr||0}"></div></div><p class="note">WSJF = (value + criticality + risk reduction) ÷ estimate.</p>`;
+    else h+=`<label for="f-mo">MoSCoW priority</label><select id="f-mo" data-f="moscow">${opt(Object.keys(MOS),it.moscow)}</select>`;
+  }
+  h+=cmHtml(it)+`<button class="btn danger" data-act="del">Delete this ${lc(kind)}</button>`;
+  p.innerHTML=h;p.classList.add('open');
+  if(!isMgr())p.querySelectorAll('input,select,textarea').forEach(el=>{if(!(el.dataset.f==='status'||el.dataset.ac!==undefined||el.id==='cmNew'))el.disabled=true;});
+}
+
+/* ---------- render ---------- */
+function renderMain(){
+  $('#net').textContent=MODE==='loading'?'':MODE==='local'?'Demo mode: your changes are saved in this browser only.':RO?'You have view-only access to this workspace, so your changes are not saved.':'Shared workspace: everyone with access sees changes as they happen.';
+  if(MODE==='loading'){['#blurb','#stats','#side'].forEach(q=>{$(q).hidden=true;});$('.shell').classList.add('solo');$('#crumb').innerHTML='<strong>Plotline</strong>';$('#head').innerHTML='';$('#main').innerHTML='<p class="hint">Connecting to the shared workspace…</p>';return;}
+  document.body.dataset.role=isMgr()?'manager':'member';
+  $('#as').innerHTML=ACT?`<span class="cr">Viewing as ${esc(nameOf(ACT))}, who sees only assigned work. <button class="link" data-act="asExit">Back to my view</button></span>`:'';
+  ['#blurb','#stats','#side'].forEach(q=>{$(q).hidden=!S;});
+  $('.shell').classList.toggle('solo',!S);
+  const pr=DB.products.find(x=>x.id===DB.prod);
+  $('#crumb').innerHTML='<strong>Plotline</strong> &nbsp;/&nbsp; <button class="link" data-act="products">Products</button>'+(pr?' &nbsp;/&nbsp; <button class="link" data-act="home">'+esc(pr.name)+'</button>':'')+(S?' &nbsp;/&nbsp; '+esc(S.name||'Untitled project'):'');
+  $('#create').textContent=S?'Create issue':pr?'Create project':'Create product';
+  if(!S){document.body.dataset.m='agile';$('#head').innerHTML='';$('#main').innerHTML=DB.page==='team'&&isMgr()?teamPage():home();resolveNames();save();return;}
+  if(S.view==='settings'&&!isMgr())S.view='backlog';
+  document.body.dataset.m=S.m;
+  const views=[['backlog','Backlog'],['board',S.m==='waterfall'?'Phases':S.m==='scaled'?'Program board':'Board'],['roadmap','Roadmap'],['analysis','Analysis'],['settings','Settings']];
+  $('#head').innerHTML=`<h1 class="h1">${(views.find(v=>v[0]===S.view)||views[0])[1]}</h1>`;
+  $('#blurb').textContent=cfg().blurb;
+  $('#stats').innerHTML=lateStat()+stats();
+  $('#side').innerHTML=`<div class="pid"><span class="avatar">${esc(S.key.slice(0,2))}</span><div><strong>${esc(S.name)||'Untitled project'}</strong><span class="small">${M[S.m].name} project${pr?' in '+esc(pr.name):''}</span></div></div>`+views.map(t=>`<button data-act="set" data-k="view" data-v="${t[0]}" aria-pressed="${S.view===t[0]}">${t[1]}</button>`).join('');
+  $('#stats').hidden=$('#blurb').hidden=S.view==='settings';
+  $('#main').innerHTML=({backlog,board,roadmap,settings,analysis})[S.view]();
+  resolveNames();
+  save();
+}
+function renderAll(){renderMain();renderPanel();}
+
+/* ---------- actions ---------- */
+function canPhase(e,p){
+  for(let i=e.phase;i<p;i++)if(!S.gates[i]){toast(`Sign the ${PH[i]} gate before moving this into ${PH[i+1]}.`);return false;}
+  return true;
+}
+function apply(it,str){
+  for(const pair of str.split(';')){
+    const [k,v]=pair.split('=');
+    if(!isMgr()&&k!=='status')return;
+    if(k==='phase'){if(!canPhase(it,+v))return;it.phase=+v;}
+    else if(k==='sprint')it.sprint=+v;else it[k]=v;
+  }
+  renderAll();
+}
+function newStory(epic,feat,title,kind){
+  let f=feat||(feats(epic)[0]||{}).id;
+  if(!f){f='F'+(S.seq++);S.items.push({id:f,no:S.no++,type:'feature',parent:epic,title:'General'});}
+  const s={id:'S'+(S.seq++),no:S.no++,kind:kind||'story',assignee:'',reporter:meId(),comments:[],created:Date.now(),type:'story',parent:f,title:title||'',asA:'',iWant:'',soThat:'',ac:[],pts:0,status:'todo',sprint:0,team:TEAMS[0],moscow:'Should',reach:1000,impact:1,conf:50,bv:3,tc:3,rr:3,dep:''};
+  S.items.push(s);return s;
+}
+function newEpic(title){const e={id:'E'+(S.seq++),no:S.no++,type:'epic',title:title||'',phase:0,start:0,len:2,horizon:'later'};S.items.push(e);return e;}
+function focusTitle(){const t=$('#f-title');if(t)t.focus();}
+
+document.addEventListener('click',ev=>{
+  const el=ev.target.closest('[data-act]');if(!el)return;
+  if(MODE==='loading')return;
+  const a=el.dataset.act,id=el.dataset.id,it=S&&id&&by(id);
+  if(ev.target.closest('select,textarea,input'))return;
+  if(MG.indexOf(a)>=0&&!isMgr())return;
+  if(['products','home','openProd','openProj'].indexOf(a)>=0)DB.page=null;
+  if(a==='set'){
+    S[el.dataset.k]=el.dataset.n?+el.dataset.v:el.dataset.v;
+    if(el.dataset.k==='m'){S.score=cfg().score;S.crForm=null;}
+    renderAll();
+  }
+  else if(a==='open'){S.sel=id;S.creating=false;renderPanel();loadPeople();}
+  else if(a==='create'){
+    if(!S){DB.form=true;renderMain();$(DB.products.find(x=>x.id===DB.prod)?'#np-name':'#pd-name').focus();}
+    else{S.sel=null;S.creating=true;renderPanel();$('#c-title').focus();}
+  }
+  else if(a==='createIssue'){
+    const ty=$('#c-type').value,t=$('#c-title').value.trim(),ep=$('#c-epic').value,c=cfg();
+    if(!t){toast('Add a summary first.');return;}
+    if(ty!=='epic'&&!ep){toast(`Create ${S.m==='agile'||S.m==='scaled'?'an':'a'} ${lc(c.epic)} first, then add issues to it.`);return;}
+    S.creating=false;
+    if(gated()&&S.locked&&(ty==='epic'||S.m==='waterfall')){
+      S.crs.unshift({id:'C'+(S.seq++),kind:ty==='epic'?'epic':'story',epic:ep,title:t,state:'open'});S.view='backlog';renderAll();toast('The baseline is locked, so this was raised as a change request.');return;
+    }
+    const n=ty==='epic'?newEpic(t):newStory(ep,null,t,ty);S.sel=n.id;renderAll();
+  }
+  else if(a==='startSprint'){S.sprint=+el.dataset.n;renderAll();toast(`Sprint ${S.sprint} started.`);}
+  else if(a==='completeSprint'){
+    const n=S.sprint,left=stories().filter(s=>s.sprint===n&&s.status!=='done'),nx=[1,2,3,4].find(x=>x>n&&!S.closed.includes(x))||0;
+    left.forEach(s=>{s.sprint=nx;});S.closed.push(n);S.sprint=nx;renderAll();
+    toast(`Sprint ${n} completed. ${left.length} unfinished issue${left.length===1?'':'s'} moved to ${nx?'Sprint '+nx:'the backlog'}.`);
+  }
+  else if(a==='close'){S.sel=null;S.creating=false;renderPanel();}
+  else if(a==='up'||a==='down'){
+    ev.stopPropagation();
+    const e=epicOf(it),g=bySprint()?stories().filter(s=>(s.sprint||0)===(it.sprint||0)):cfg().feat?stories().filter(s=>s.parent===it.parent):storiesOf(e.id),i=g.indexOf(it),o=g[i+(a==='up'?-1:1)];
+    if(o){const x=S.items.indexOf(it),y=S.items.indexOf(o);S.items[x]=o;S.items[y]=it;renderMain();}
+  }
+  else if(a==='addStory'){const s=newStory(el.dataset.epic,el.dataset.feat);S.sel=s.id;renderAll();focusTitle();}
+  else if(a==='addEpic'){const e=newEpic();S.sel=e.id;renderAll();focusTitle();}
+  else if(a==='addFeat'){const f={id:'F'+(S.seq++),no:S.no++,type:'feature',parent:el.dataset.epic,title:''};S.items.push(f);S.sel=f.id;renderAll();focusTitle();}
+  else if(a==='lock'){S.locked=!S.locked;S.crForm=null;renderMain();toast(S.locked?'Baseline locked. New scope now needs a change request.':'Baseline unlocked. Scope can be edited directly.');}
+  else if(a==='crNew'){S.crForm={kind:el.dataset.kind,epic:el.dataset.epic||''};renderMain();const t=$('#crTitle');if(t){t.focus();t.scrollIntoView({block:'center'});}}
+  else if(a==='crCancel'){S.crForm=null;renderMain();}
+  else if(a==='crRaise'){
+    const t=$('#crTitle').value.trim();
+    if(!t){toast('Give the change request a title first.');return;}
+    S.crs.unshift({id:'C'+(S.seq++),kind:S.crForm.kind,epic:S.crForm.epic,title:t,state:'open'});S.crForm=null;renderMain();toast('Change request raised. Approve it to add it to the baseline.');
+  }
+  else if(a==='crOk'||a==='crNo'){
+    const r=S.crs.find(c=>c.id===id);if(!r)return;
+    if(a==='crOk'){
+      if(r.kind==='epic')newEpic(r.title);
+      else if(by(r.epic))newStory(r.epic,null,r.title);
+      else{toast('The requirement this belonged to was deleted.');r.state='no';renderMain();return;}
+      r.state='ok';
+    }else r.state='no';
+    renderMain();
+  }
+  else if(a==='acAdd'){const cur=by(S.sel),v=$('#acNew').value.trim();if(cur&&v){cur.ac.push({t:v,d:false});renderAll();$('#acNew').focus();}}
+  else if(a==='cmAdd'){const cur=by(S.sel),v=$('#cmNew').value.trim();if(cur&&v){cur.comments=(cur.comments||[]).concat([{by:meId(),at:Date.now(),text:v}]);renderAll();}}
+  else if(a==='cmDel'){const cur=by(S.sel);if(cur&&cur.comments){cur.comments=cur.comments.filter((c,i)=>i!==+el.dataset.i);renderAll();}}
+  else if(a==='importSkip'){try{localStorage.setItem('plotline-imported','1');}catch(e){}renderMain();}
+  else if(a==='importLocal'){
+    const r=lsData();
+    if(r){
+      (r.products||[]).forEach(d=>{if(d&&d.id&&!DB.products.find(x=>x.id===d.id))DB.products.push({id:d.id,name:d.name||'Untitled',desc:d.desc||''});});
+      r.projects.filter(p=>p&&Array.isArray(p.items)&&M[p.m]&&!DB.projects.find(x=>x.id===p.id)).forEach(p=>{
+        fix(p);p.loaded=true;p.sel=null;p.crForm=null;p.creating=false;
+        if(p.id==='sample'&&!p.product)p.product='gb';
+        if(!DB.products.find(x=>x.id===p.product)){
+          if(p.product==='gb')DB.products.push(Object.assign({},GB));
+          else{if(!DB.products.find(x=>x.id==='mine'))DB.products.push({id:'mine',name:'My product',desc:''});p.product='mine';}
+        }
+        DB.projects.push(p);
+      });
+    }
+    try{localStorage.setItem('plotline-imported','1');}catch(e){}
+    renderAll();toast('Moved into the shared workspace.');
+  }
+  else if(a==='tech'){S.tech=el.dataset.v;if(['rice','wsjf','moscow'].indexOf(S.tech)>=0)S.score=S.tech;renderMain();}
+  else if(a==='asisAdd'){const e=by(id),inp=document.getElementById('asis-'+id),v=inp?inp.value.trim():'';if(e&&v){e.asis=(e.asis||[]).concat([v]);renderAll();}}
+  else if(a==='asisDel'){const e=by(id);if(e&&e.asis){e.asis=e.asis.filter((x,i)=>i!==+el.dataset.i);renderAll();}}
+  else if(a==='team'){pick(null);DB.page='team';DB.form=false;renderAll();window.scrollTo(0,0);}
+  else if(a==='tmCreate'){
+    const n=$('#tm-name').value.trim(),em=$('#tm-email').value.trim().toLowerCase(),ro=$('#tm-role').value==='manager'?'manager':'member';
+    if(!n&&!em){toast('Enter an email address or a name.');return;}
+    if(em&&!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(em)){toast('That email address does not look complete.');return;}
+    if(em&&DB.team.some(t=>(t.email||'').toLowerCase()===em)){toast('That email address is already on the team.');return;}
+    const t={id:'x'+Date.now().toString(36),role:ro,label:n,ph:true,email:em};DB.team.push(t);if(em)DB.inv=t.id;renderMain();
+    toast(em?`Added ${em}. Now give that address access with Share.`:`Added ${n}. You can assign work to them now.`);
+  }
+  else if(a==='tmInv'){DB.inv=DB.inv===id?null:id;renderMain();}
+  else if(a==='joinTeam'){if(meId()&&!myEntries().length){DB.team.push({id:meId(),role:'member',label:'',ph:false});renderAll();toast('You have joined the team as a member.');}}
+  else if(a==='tmAdd'){if(!tm(id)){DB.team.push({id,role:'member',label:'',ph:false});renderMain();toast(`Added ${nameOf(id)} as a member.`);}}
+  else if(a==='tmDel'){DB.team=DB.team.filter(t=>t.id!==id);renderMain();}
+  else if(a==='viewAs'){ACT=id;DB.page=null;renderAll();window.scrollTo(0,0);}
+  else if(a==='asExit'){ACT=null;renderAll();}
+  else if(a==='acDel'){const cur=by(S.sel);if(cur){cur.ac.splice(+el.dataset.i,1);renderAll();}}
+  else if(a==='del'){
+    const cur=by(S.sel);if(!cur)return;
+    let kill=[cur.id];
+    if(cur.type==='epic')feats(cur.id).forEach(f=>kill.push(f.id));
+    if(cur.type!=='story')kill=kill.concat(stories().filter(s=>kill.includes(s.parent)).map(s=>s.id));
+    S.items=S.items.filter(i=>!kill.includes(i.id));
+    S.items.forEach(i=>{if(kill.includes(i.dep))i.dep='';});
+    S.sel=null;renderAll();toast(`Deleted “${cur.title||'Untitled'}”.`);
+  }
+  else if(a==='reset'){const c=DB.cur;DB.projects=DB.projects.filter(p=>p.id!=='sample');DB.projects.unshift(seed());if(!DB.products.find(x=>x.id==='gb'))DB.products.unshift({id:'gb',name:'Greenbox',desc:'Meal-kit delivery app for web and mobile'});pick(c);renderAll();toast('Sample project restored.');}
+  else if(a==='products'){pick(null);DB.prod=null;DB.form=false;renderAll();}
+  else if(a==='openProd'){DB.prod=id;DB.form=false;DB.confirm=null;renderAll();window.scrollTo(0,0);}
+  else if(a==='newProd'){DB.form=true;renderMain();$('#pd-name').focus();}
+  else if(a==='createProd'){
+    const n=$('#pd-name').value.trim();
+    if(!n){toast('Give the product a name.');$('#pd-name').focus();return;}
+    const d={id:'D'+Date.now(),name:n,desc:$('#pd-desc').value.trim()};DB.products.push(d);DB.prod=d.id;DB.form=false;renderAll();toast(`Created “${n}”. Now add its first project.`);
+  }
+  else if(a==='delProd'){
+    if(DB.confirm!==id){DB.confirm=id;renderMain();return;}
+    const d=DB.products.find(x=>x.id===id);DB.products=DB.products.filter(x=>x.id!==id);DB.projects=DB.projects.filter(p=>p.product!==id);DB.confirm=null;DB.prod=null;renderMain();toast(`Deleted “${(d&&d.name)||'product'}” and its projects.`);
+  }
+  else if(a==='home'){pick(null);DB.form=false;renderAll();}
+  else if(a==='openProj'){pick(id);renderAll();window.scrollTo(0,0);}
+  else if(a==='newProj'){DB.form=true;renderMain();$('#np-name').focus();}
+  else if(a==='cancelProj'){DB.form=false;renderMain();}
+  else if(a==='createProj'){
+    const n=$('#np-name').value.trim(),r=document.querySelector('input[name="np-m"]:checked');
+    if(!n){toast('Give the project a name.');$('#np-name').focus();return;}
+    if(!r){toast('Choose a methodology for this project.');return;}
+    const p=blank(n,r.value,$('#np-key').value.toUpperCase().replace(/[^A-Z0-9]/g,'')||autoKey(n));p.due=$('#np-due').value||'';DB.projects.push(p);DB.form=false;pick(p.id);renderAll();window.scrollTo(0,0);toast(`Created “${n}” as ${M[p.m].name === 'Agile' ? 'an' : 'a'} ${M[p.m].name} project.`);
+  }
+  else if(a==='delProj'){
+    if(DB.confirm!==id){DB.confirm=id;renderMain();return;}
+    const p=DB.projects.find(x=>x.id===id);DB.projects=DB.projects.filter(x=>x.id!==id);DB.confirm=null;renderMain();toast(`Deleted “${(p&&p.name)||'Untitled project'}”.`);
+  }
+});
+
+document.addEventListener('keydown',ev=>{
+  if(ev.key==='Escape'&&S&&(S.sel||S.creating)){S.sel=null;S.creating=false;renderPanel();}
+  if(ev.key==='Enter'&&ev.target.id==='c-title'){ev.preventDefault();const b=document.querySelector('[data-act="createIssue"]');if(b)b.click();}
+  if((ev.key==='Enter'||ev.key===' ')&&ev.target.matches('.row,div.card')){ev.preventDefault();ev.target.click();}
+  if(ev.key==='Enter'&&ev.target.id&&ev.target.id.indexOf('asis-')===0){ev.preventDefault();const b=ev.target.nextElementSibling;if(b)b.click();}
+  if(ev.key==='Enter'&&(ev.target.id==='tm-name'||ev.target.id==='tm-email')){ev.preventDefault();const b=document.querySelector('[data-act="tmCreate"]');if(b)b.click();}
+  if(ev.key==='Enter'&&ev.target.id==='acNew'){ev.preventDefault();const b=document.querySelector('[data-act="acAdd"]');if(b)b.click();}
+  if(ev.key==='Enter'&&ev.target.id==='crTitle'){ev.preventDefault();const b=document.querySelector('[data-act="crRaise"]');if(b)b.click();}
+});
+
+function onField(ev){
+  const el=ev.target,it=S&&S.sel&&by(S.sel);if(!it)return;
+  if(el.dataset.ac!==undefined){if(ev.type==='change'){it.ac[+el.dataset.ac].d=el.checked;renderAll();}return;}
+  const f=el.dataset.f;if(!f)return;
+  const v=el.dataset.n?+el.value:el.value;
+  if(f==='phase'){if(ev.type!=='change')return;if(canPhase(it,v))it.phase=v;renderAll();return;}
+  it[f]=v;renderMain();
+}
+$('#panel').addEventListener('input',onField);
+$('#panel').addEventListener('change',onField);
+document.addEventListener('change',ev=>{
+  const g=ev.target.dataset&&ev.target.dataset.gate;
+  if(g!==undefined){if(isMgr())S.gates[+g]=ev.target.checked;renderMain();}
+});
+
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.id==='pname'&&S){S.name=t.value;const n=$('#side strong');if(n)n.textContent=t.value||'Untitled project';save();}
+  if(t.id==='pkey'&&S){S.key=t.value.toUpperCase().replace(/[^A-Z0-9]/g,'')||'PRJ';save();}
+  if(t.id==='np-key')t.dataset.touched='1';
+  if(t.id==='np-name'){const k=$('#np-key');if(k&&!k.dataset.touched)k.value=autoKey(t.value);}
+});
+document.addEventListener('change',ev=>{if(ev.target.id==='pm'&&S){S.m=ev.target.value;S.score=cfg().score;S.crForm=null;renderAll();}});
+
+/* ---------- deadlines, team, analysis ---------- */
+const MG=['addEpic','addStory','addFeat','crNew','crOk','crNo','crRaise','lock','create','createIssue','newProd','createProd','newProj','createProj','delProd','delProj','del','reset','startSprint','completeSprint','up','down','acAdd','acDel','importLocal','asisAdd','asisDel','tmAdd','tmCreate','tmDel','tmInv','viewAs','team'];
+const today=()=>new Date(Date.now()-new Date().getTimezoneOffset()*60000).toISOString().slice(0,10);
+const doneItem=i=>{if(i.type==='story')return i.status==='done';const l=S.items.filter(s=>s.type==='story'&&(epicOf(s)||{}).id===i.id);return l.length>0&&l.every(s=>s.status==='done');};
+const late=i=>!!i.due&&i.due<today()&&!doneItem(i);
+const fmtD=d=>new Date(d+'T00:00').toLocaleDateString(undefined,{day:'numeric',month:'short'});
+const dueTag=i=>i.due?`<span class="due${late(i)?' late':''}">${late(i)?'Overdue ':'Due '}${fmtD(i.due)}</span>`:'';
+const projLate=p=>!!p.due&&p.due<today()&&p.items.some(i=>i.type==='story'&&i.status!=='done');
+const dueHtml=it=>`<label for="f-due">Deadline</label><input id="f-due" type="date" data-f="due" value="${esc(it.due||'')}">`;
+const dis=()=>isMgr()?'':' disabled';
+function lateStat(){
+  const n=stories().filter(late).length+epics().filter(late).length;
+  return (S.due?`<div class="stat${projLate(S)?' bad':''}"><b>${fmtD(S.due)}</b>project deadline${projLate(S)?', overdue':''}</div>`:'')+(n?`<div class="stat bad"><b>${n}</b>overdue</div>`:'');
+}
+function teamPage(){
+  const cnt=id=>DB.projects.reduce((a,p)=>a+p.items.filter(i=>i.assignee===id&&i.status!=='done').length,0);
+  let h='<h1 class="h1">Team</h1><p class="hint">Managers see every product, project and issue, and manage this list. Members see only the epics and stories assigned to them, and can update status, tick acceptance criteria and comment.</p>';
+  h+=`<section class="newp">${USER?'<label for="tm-q">Add someone from your organization</label><input id="tm-q" type="text" placeholder="Search by name"><div id="tm-hits"></div>':''}<label for="tm-email" style="margin-top:${USER?14:0}px">Invite anyone by email address</label><div class="fld" style="grid-template-columns:repeat(auto-fit,minmax(150px,1fr));align-items:end"><input id="tm-email" type="text" inputmode="email" autocomplete="off" placeholder="name@example.com" aria-label="Email address"><input id="tm-name" type="text" placeholder="Name (optional)" aria-label="Name"><select id="tm-role" aria-label="Role"><option value="member">Member</option><option value="manager">Manager</option></select><button class="btn pri" data-act="tmCreate">Add to team</button></div><p class="note">Adding an email address here decides what that person sees. They also need access to open the app: use Share on this artifact in Claude and invite the same address. When they sign in with it, the app recognises them. Leave the email blank to create a person you can assign work to before inviting them.</p></section>`;
+  const rows=DB.team.slice();
+  if(meId()&&!myEntries().length)rows.unshift({id:meId(),role:'manager',self:true});
+  rows.forEach(t=>{
+    h+=`<div class="prow"><span class="who">${esc(initials(nameOf(t.id)))}</span><span class="n" style="font-size:20px">${esc(nameOf(t.id))}${t.id===meId()||myEntries().indexOf(t)>=0?' (you)':''}</span>${t.email&&t.label?`<span class="small">${esc(t.email)}</span>`:''}${t.ph?`<span class="tag">${t.email?'Invited by email':'No email yet'}</span>`:''}`+(t.self?'<span class="small">Manager, as owner or editor of this workspace</span>':`<select class="stsel" data-tm="${esc(t.id)}" aria-label="Role">${opt([['member','Member'],['manager','Manager']],t.role)}</select><span class="small">${cnt(t.id)} open issue${cnt(t.id)===1?'':'s'}</span>${t.email?`<button class="btn sm" data-act="tmInv" data-id="${esc(t.id)}">Invite text</button>`:''}<button class="btn sm" data-act="viewAs" data-id="${esc(t.id)}">View as</button><button class="btn sm" data-act="tmDel" data-id="${esc(t.id)}">Remove</button>`)+'</div>'+(DB.inv===t.id&&t.email?invBox(t):'');
+  });
+  if(!rows.length)h+='<p class="hint">No one here yet. Create a person above to start assigning work.</p>';
+  return h;
+}
+const TECH=[
+ ['moscow','MoSCoW','Must or nice to have?','build'],
+ ['rice','RICE','Best value for the effort?','build'],
+ ['wsjf','WSJF','What is most urgent?','build'],
+ ['cmp','Compare','Do the methods agree?','build'],
+ ['most','MOST','Why are we doing this?','why'],
+ ['map','Process map','What changes for people?','why'],
+ ['fc','Forecast','When will we finish?','when']];
+const TGROUP=[['build','What should we do first?'],['why','Why are we doing it?'],['when','When will it be done?']];
+const THOW={
+ moscow:['Every story goes in one of four boxes: Must (the release fails without it), Should (important but not vital), Could (nice if there is time) and Won’t (not this time).','Change a story’s box with its menu or by dragging the card. Keep Must-haves under about 60% of the effort, so there is room for surprises.'],
+ rice:['RICE asks four questions about each story: how many people it helps (Reach), how much it helps each one (Impact), how sure you are (Confidence), and how much work it is (Effort).','Score = reach × impact × confidence ÷ effort, so a higher score means better value for the work. Select Adjust on a story, change its answers, and watch it move up or down.'],
+ wsjf:['WSJF (Weighted Shortest Job First) puts first the work that is valuable, urgent or reduces risk, and is quick to finish.','Score = (value + urgency + risk reduction) ÷ size. Select Adjust on a story, change its answers, and watch it move up or down.'],
+ cmp:['MoSCoW, RICE and WSJF each rank your open stories. When they strongly disagree about a story, one set of assumptions is probably wrong.','Each card shows where the three methods place the story, from top priority on the left to bottom on the right. Use the buttons to fix whichever answers look wrong.'],
+ most:['MOST links daily work to purpose: the Mission (why the project exists), Objectives (the epics), Strategy (how each objective will be reached) and Tactics (the stories).','Write the mission and a strategy for each objective. Stories appear as tactics automatically.'],
+ map:['Compare how a process works today (as-is) with how it will work after the project (to-be).','List today’s steps for each epic. The to-be flow is built from its stories and fills in as they are delivered.'],
+ fc:['Instead of one guessed date, the forecast plays out the rest of the project 3,000 times. In each run the team’s speed varies a little from sprint to sprint, as it does in real life.','The chart shows how often each finish date came up. Use the what-if settings to try other speeds or scope; nothing in the project changes.']
+};
+let PREVR=null,XP=null,FCOFF={},CHK=null;
+const insight=(t,tone)=>`<div class="insight${tone?' '+tone:''}">${t}</div>`;
+function analysis(){
+  const t=TECH.find(x=>x[0]===S.tech)?S.tech:'moscow',T=TECH.find(x=>x[0]===t);
+  const pick=TGROUP.map(g=>`<div class="tgrp"><span class="small">${g[1]}</span><div class="tbtns">${TECH.filter(x=>x[3]===g[0]).map(x=>`<button class="tbtn" data-act="tech" data-v="${x[0]}" aria-pressed="${t===x[0]}"><b>${x[1]}</b><span>${x[2]}</span></button>`).join('')}</div></div>`).join('');
+  let pre='';
+  if(t==='most'){const es=epics(),n=es.filter(e=>!(e.strategy||'').trim()).length;pre=insight(!(S.mission||'').trim()?'Start with the mission: one sentence on why this project exists.':n?`${n} of ${es.length} objectives still need a strategy.`:`All ${es.length} objectives have a strategy, and every story is linked to one.`,!(S.mission||'').trim()||n?'warn':'ok');}
+  if(t==='map'){const es=epics(),n=es.filter(e=>!(e.asis||[]).length).length,l=stories(),d=l.filter(s=>s.status==='done').length;pre=insight(`${l.length?Math.round(d/l.length*100):0}% of the new process is delivered (${d} of ${l.length} steps).${n?` ${n} of ${es.length} processes have no as-is steps yet.`:''}`,n?'warn':'');}
+  const body=({moscow:aMoscow,rice:()=>aScore('rice'),wsjf:()=>aScore('wsjf'),most:aMost,map:aMap,cmp:aCmp,fc:aFc})[t]();
+  return `<div class="tpick">${pick}</div><details class="how"><summary>How ${esc(T[1])} works</summary><p>${THOW[t][0]}</p><p>${THOW[t][1]}</p></details>`+pre+body;
+}
+
+const riceOf=s=>(+s.reach||0)*(+s.impact||0)*(+s.conf||0)/100/Math.max(+s.pts||1,1);
+const wsjfOf=s=>((+s.bv||0)+(+s.tc||0)+(+s.rr||0))/Math.max(+s.pts||1,1);
+const TN={moscow:'MoSCoW',rice:'RICE',wsjf:'WSJF'};
+const IMP=[[0.5,'Low'],[1,'Medium'],[2,'High'],[3,'Massive']];
+function ranks(l,f){
+  const v=l.map(f),n=l.length,o={};
+  l.forEach((s,i)=>{let b=0,eq=0;v.forEach(x=>{if(x>v[i])b++;else if(x===v[i])eq++;});const r=b+(eq-1)/2;o[s.id]={r:Math.round(r+1),p:n>1?r/(n-1):0};});
+  return o;
+}
+function why(s,k,l){
+  const med=f=>{const a=l.map(x=>+x[f]||0).sort((x,y)=>x-y);return a[Math.floor(a.length/2)]||0;};
+  const r=[];
+  if(k==='moscow')r.push('it is only a '+s.moscow);
+  if(k==='rice'){if((+s.reach||0)<med('reach'))r.push('it reaches fewer people than most');if((+s.impact||0)<=0.5)r.push('its impact is low');if((+s.conf||0)<60)r.push('confidence is low');}
+  if(k==='wsjf'){if((+s.bv||0)<med('bv'))r.push('its business value is below average');if((+s.tc||0)<med('tc'))r.push('it is not urgent');}
+  if(k!=='moscow'&&(+s.pts||0)>=8)r.push('it is a large piece of work');
+  return r;
+}
+function snap(){
+  if(!S||S.view!=='analysis'||(S.tech!=='rice'&&S.tech!=='wsjf'))return;
+  const f=S.tech==='rice'?riceOf:wsjfOf,l=stories().filter(s=>s.status!=='done').sort((a,b)=>f(b)-f(a));
+  PREVR={kind:S.tech,r:{}};l.forEach((s,i)=>{PREVR.r[s.id]=i+1;});
+}
+
+function aMoscow(){
+  const k=Object.keys(MOS),open=stories().filter(s=>s.status!=='done'),tot=pts(open)||1;
+  const col={'Must':'var(--acc)','Should':'color-mix(in srgb,var(--acc) 60%,var(--surface))','Could':'color-mix(in srgb,var(--acc) 30%,var(--surface))','Won’t':'var(--line)'};
+  const share=x=>Math.round(pts(open.filter(s=>s.moscow===x))/tot*100),must=share('Must');
+  let h=insight(open.length?`Must-haves are <b>${must}%</b> of the remaining effort. ${must>60?'That leaves little room for surprises, so consider moving some to Should.':'That leaves healthy room for surprises.'}`:'No open stories yet.',must>60?'warn':'ok');
+  h+=`<div class="stack" role="img" aria-label="Share of remaining effort by category">${k.map(x=>share(x)?`<i style="width:${share(x)}%;background:${col[x]}" title="${x}: ${share(x)}%"></i>`:'').join('')}</div><div class="slegend">${k.map(x=>`<span><i style="background:${col[x]}"></i>${x} ${share(x)}%</span>`).join('')}</div>`;
+  const all=stories();
+  h+='<div class="scroll"><div class="cols" style="grid-template-columns:repeat(4,1fr)">'+k.map(x=>{const l=all.filter(s=>s.moscow===x);return `<div class="col" data-for="story" data-set="moscow=${x}"><h4>${x}<em>${l.length}</em></h4>${l.map(s=>`<div class="card" role="button" tabindex="0" draggable="true" data-act="open" data-id="${s.id}">${esc(s.title)||'Untitled'}<span class="m"><span class="key">${esc(ik(s))}</span><span class="pts">${+s.pts||'–'}</span>${s.status==='done'?'<span>Done</span>':''}</span><select class="stsel" data-q="moscow" data-id="${s.id}" aria-label="Category" style="margin-top:8px"${dis()}>${opt(k,s.moscow)}</select></div>`).join('')||'<p class="small">Drop stories here.</p>'}</div>`;}).join('')+'</div></div>';
+  return h;
+}
+
+function aScore(kind){
+  const f=kind==='rice'?riceOf:wsjfOf,l=stories().filter(s=>s.status!=='done').sort((a,b)=>f(b)-f(a)),mx=Math.max(1,...l.map(f));
+  if(!l.length){PREVR=null;return insight('No open stories to score yet. Add stories in the backlog first.');}
+  const u=S.m==='waterfall'?'days':'points',fmt=n=>kind==='rice'?Math.round(n).toLocaleString():n.toFixed(1),top=l[0];
+  let h;
+  if(kind==='rice'){const weak=l.filter(s=>(+s.conf||0)<50).length;h=insight(`<b>${esc(top.title)}</b> gives the best value for the effort.${weak?` ${weak} ${weak===1?'story is':'stories are'} scored with under 50% confidence, so check ${weak===1?'it':'those'} before committing.`:''}`,weak?'warn':'ok');}
+  else h=insight(`Do <b>${esc(top.title)}</b> first: it delivers the most value, urgency and risk reduction for its size.`,'ok');
+  h+=l.map((s,i)=>{
+    let mv='';
+    if(PREVR&&PREVR.kind===kind&&PREVR.r[s.id]){const d=PREVR.r[s.id]-(i+1);if(d)mv=`<span class="mv2 ${d>0?'up':'dn'}">${d>0?'▲':'▼'} ${Math.abs(d)}</span>`;}
+    const open=XP===s.id;
+    const eq=kind==='rice'?`${(+s.reach||0).toLocaleString()} people × ${(IMP.find(x=>x[0]===+s.impact)||[0,'?'])[1]} impact × ${+s.conf||0}% sure ÷ ${+s.pts||1} ${u} = <b>${fmt(f(s))}</b>`:`(${+s.bv||0} value + ${+s.tc||0} urgency + ${+s.rr||0} risk) ÷ ${+s.pts||1} ${u} = <b>${fmt(f(s))}</b>`;
+    let ctl='';
+    if(open){
+      const sl=(fld,lab,min,max,step,suf)=>`<div class="sl"><label for="sl-${fld}">${lab}</label><input id="sl-${fld}" type="range" min="${min}" max="${max}" step="${step}" data-q="${fld}" data-n="1" data-suf="${suf||''}" data-id="${s.id}" value="${+s[fld]||0}"${dis()}><output>${+s[fld]||0}${suf||''}</output></div>`;
+      const btns=(fld,list)=>`<div class="seg">${list.map(x=>`<button data-act="setv" data-id="${s.id}" data-f="${fld}" data-v="${x[0]}" aria-pressed="${+s[fld]===x[0]}"${dis()}>${x[1]}</button>`).join('')}</div>`;
+      const size=`<div class="sl"><span class="lab">${kind==='rice'?'Effort':'Size'} (${u})</span>${btns('pts',[1,2,3,5,8,13].map(v=>[v,v]))}</div>`;
+      ctl=kind==='rice'?`<div class="ctl"><div class="sl"><label for="sl-reach">People it reaches per quarter</label><input id="sl-reach" type="number" min="0" step="100" data-q="reach" data-n="1" data-id="${s.id}" value="${+s.reach||0}"${dis()}></div><div class="sl"><span class="lab">Impact on each person</span>${btns('impact',IMP)}</div>${sl('conf','How sure are you?',0,100,10,'%')}${size}</div>`
+        :`<div class="ctl">${sl('bv','Value to the business',1,20,1)}${sl('tc','How urgent it is',1,20,1)}${sl('rr','Risk it removes or work it unlocks',1,20,1)}${size}</div>`;
+    }
+    return `<div class="acard${open?' open':''}"><div class="hd"><span class="rk">${i+1}</span><button class="t" data-act="open" data-id="${s.id}">${esc(s.title)||'Untitled'}</button>${mv}<span class="chip">${fmt(f(s))}</span><button class="btn sm" data-act="xp" data-id="${s.id}" aria-expanded="${open}">${open?'Close':'Adjust'}</button></div><div class="sbar"><i style="width:${Math.round(f(s)/mx*100)}%"></i></div><p class="eq">${eq}</p>${ctl}</div>`;
+  }).join('');
+  PREVR=null;
+  return h;
+}
+
+function aCmp(){
+  const l=stories().filter(s=>s.status!=='done'),n=l.length;
+  if(n<3)return insight('Add at least three open stories to compare the methods.');
+  const R={moscow:ranks(l,s=>MOS[s.moscow]||0),rice:ranks(l,riceOf),wsjf:ranks(l,wsjfOf)};
+  const c=l.map(s=>{const ps=Object.keys(R).map(k=>[k,R[k][s.id].p]).sort((a,b)=>a[1]-b[1]);return {s,hi:ps[0][0],lo:ps[2][0],gap:ps[2][1]-ps[0][1]};}).filter(x=>x.gap>=0.5).sort((a,b)=>b.gap-a.gap);
+  let h=insight(c.length?`The methods strongly disagree about <b>${c.length} of ${n}</b> open stories. These are worth a quick talk before the next planning session.`:`The three methods broadly agree on all ${n} open stories, so your priorities are well supported.`,c.length?'warn':'ok');
+  const mi=Object.keys(MOS);
+  c.forEach(x=>{
+    const s=x.s,rs=why(s,x.lo,l);
+    const track=Object.keys(R).map(k=>`<div class="trk"><span>${TN[k]}</span><div class="line"><i class="${k===x.hi?'hi':k===x.lo?'lo':''}" style="left:${Math.round(R[k][s.id].p*100)}%"></i></div><span class="small">#${R[k][s.id].r}</span></div>`).join('');
+    let fix;
+    if(x.hi==='moscow'){const dn=mi[Math.min(mi.indexOf(s.moscow)+1,3)];fix=`<button class="btn sm" data-act="setv" data-s="1" data-id="${s.id}" data-f="moscow" data-v="${dn}"${dis()}>Move it to ${dn}</button><button class="btn sm" data-act="cmpgo" data-v="${x.lo}" data-id="${s.id}">Check its ${TN[x.lo]} answers</button>`;}
+    else if(x.lo==='moscow'){const up=mi[Math.max(mi.indexOf(s.moscow)-1,0)];fix=`<button class="btn sm" data-act="setv" data-s="1" data-id="${s.id}" data-f="moscow" data-v="${up}"${dis()}>Move it up to ${up}</button><button class="btn sm" data-act="cmpgo" data-v="${x.hi}" data-id="${s.id}">Check its ${TN[x.hi]} answers</button>`;}
+    else fix=`<button class="btn sm" data-act="cmpgo" data-v="rice" data-id="${s.id}">Check RICE answers</button><button class="btn sm" data-act="cmpgo" data-v="wsjf" data-id="${s.id}">Check WSJF answers</button>`;
+    h+=`<div class="acard"><div class="hd"><button class="t" data-act="open" data-id="${s.id}">${esc(s.title)||'Untitled'}</button><span class="key">${esc(ik(s))}</span>${who(s.assignee)}</div><div class="trks"><div class="trk trkh small"><span></span><span class="ends"><span>Top priority</span><span>Bottom</span></span><span>of ${n}</span></div>${track}</div><p class="small" style="margin:10px 0 8px">${TN[x.hi]} puts it near the top, but ${TN[x.lo]} ranks it low${rs.length?' because '+rs.join(', '):''}.</p><div class="fixes">${fix}</div></div>`;
+  });
+  return h;
+}
+
+const addD=(d,n)=>{const t=new Date(d+'T00:00');t.setDate(t.getDate()+n);return new Date(t-t.getTimezoneOffset()*60000).toISOString().slice(0,10);};
+function rng(a){return()=>{a|=0;a=a+0x6D2B79F5|0;let t=Math.imul(a^a>>>15,1|a);t=t+Math.imul(t^t>>>7,61|t)^t;return((t^t>>>14)>>>0)/4294967296;};}
+const SPREAD={steady:[.1,'Steady'],normal:[.25,'Normal'],wild:[.45,'Unpredictable']};
+function fcCalc(){
+  const u=S.m==='waterfall'?'days':'pts',N=3000;
+  const all=S.items.filter(s=>s.type==='story'),sized=all.filter(s=>+s.pts>0),typ=sized.length?Math.max(1,Math.round(pts(sized)/sized.length)):3,sz=s=>+s.pts||typ;
+  const es0=epics().map(e=>{const o=storiesOf(e.id).filter(s=>s.status!=='done');return {e,o,r:o.reduce((a,s)=>a+sz(s),0)};}).filter(x=>x.o.length);
+  const es=es0.filter(x=>!FCOFF[x.e.id]);
+  const open=[];es.forEach(x=>{x.o.forEach(s=>open.push(s));});
+  const rem=es.reduce((a,x)=>a+x.r,0),un=open.filter(s=>!(+s.pts)).length;
+  const h=S.closed.map(n=>pts(all.filter(s=>s.sprint===n&&s.status==='done'))).filter(v=>v>0);
+  const mode=h.length>=3&&S.fcMode!=='own'?'hist':'own';
+  const avg=h.length?Math.round(h.reduce((a,b)=>a+b,0)/h.length):20;
+  const speed=Math.max(1,+S.fcSpeed||avg),sp=(SPREAD[S.fcSpread]||SPREAD.normal)[0],len=+S.fcLen||2;
+  const made=all.filter(s=>s.created),meas=made.length?Math.round(made.filter(s=>Date.now()-s.created<3*len*7*864e5).reduce((a,s)=>a+sz(s),0)/3):null;
+  const grow=Math.max(0,S.fcGrow!==undefined&&S.fcGrow!==null?+S.fcGrow:(meas||0));
+  const seed=rem*31+speed*7+len*3+Math.round(sp*100)+(mode==='hist'?1:0);
+  const mk=R=>()=>mode==='hist'?h[Math.floor(R()*h.length)]:Math.max(.5,speed*(1+(R()*2-1)*sp));
+  let cum=0;es.forEach(x=>{cum+=x.r;x.cum=cum;});
+  const sim=g=>{
+    const R=rng(seed),draw=mk(R),K=[],ek=es.map(()=>[]);
+    if(rem>0)for(let i=0;i<N;i++){let t=0,k=0,j=0,goal=rem;while(t<goal&&k<300){k++;t+=draw();if(g)goal+=g*(.5+R());while(j<es.length&&t>=es[j].cum){ek[j].push(k);j++;}}while(j<es.length){ek[j].push(k);j++;}K.push(k);}
+    return {K,ek};
+  };
+  const main=sim(grow),K=main.K,K0=grow?sim(0).K:K;
+  es.forEach((x,j)=>{x.k=main.ek[j];});
+  const start=today(),dt=k=>addD(start,k*len*7);
+  const pc=(a,p)=>{const b=a.slice().sort((x,y)=>x-y);return b[Math.min(b.length-1,Math.floor(p*b.length))];};
+  const chance=(a,d)=>Math.round(a.filter(k=>dt(k)<=d).length/a.length*100);
+  const stuck=K.length>0&&K.filter(k=>k>=300).length/K.length>0.2;
+  const deliver=d=>{
+    if(!d)return null;
+    const n=Math.floor((new Date(d+'T00:00')-new Date(start+'T00:00'))/864e5/(len*7));
+    if(n<1)return {n:0,rows:[]};
+    const R=rng(seed+99),draw=mk(R),D=[];
+    for(let i=0;i<N;i++){let t=0;for(let k=0;k<n;k++)t+=draw();D.push(t);}
+    D.sort((a,b)=>a-b);
+    let c=0;
+    return {n,rows:open.map(s=>{c+=sz(s);let lo=0,hi=D.length;while(lo<hi){const m=(lo+hi)>>1;if(D[m]<c)lo=m+1;else hi=m;}return {s,p:Math.round((D.length-lo)/D.length*100)};})};
+  };
+  const why=[];let score=2;
+  if(mode==='own'){score=0;why.push(h.length?`there ${h.length===1?'is only 1 completed sprint':'are only '+h.length+' completed sprints'} of history, so it relies on your speed estimate`:'there are no completed sprints yet, so it relies on your speed estimate');}
+  else if(h.length<5){score=1;why.push(`it is based on ${h.length} completed sprints; five or more makes it steadier`);}
+  else why.push(`it is based on ${h.length} completed sprints`);
+  if(open.length&&un/open.length>0.2){score=Math.max(0,score-1);why.push(`${un} of ${open.length} open stories have no estimate`);}
+  if(mode==='hist'){const sd=Math.sqrt(h.reduce((a,v)=>a+(v-avg)*(v-avg),0)/h.length);if(avg&&sd/avg>0.4){score=Math.max(0,score-1);why.push('the team’s speed varies a lot between sprints');}}
+  return {u,es0,es,open,rem,un,typ,sz,h,mode,avg,speed,len,grow,meas,K,K0,dt,pc,chance,N,stuck,deliver,conf:{score,label:['Low','Medium','High'][score],why}};
+}
+function aFc(){
+  const c=fcCalc();
+  if(!c.es0.length)return insight('All visible work is done, so there is nothing left to forecast.','ok');
+  const seg=(k,opts,cur,num)=>`<div class="seg">${opts.map(o=>`<button data-act="fcset" data-k="${k}" data-v="${o[0]}"${num?' data-n="1"':''} aria-pressed="${String(cur)===String(o[0])}">${o[1]}</button>`).join('')}</div>`;
+  let ctl='<div class="fcctl"><div><h4>Try a what-if</h4><p class="small" style="margin:2px 0 0">These settings only change the forecast, not the project.</p></div><div class="sl"><span class="lab">Team speed per sprint</span>';
+  if(c.h.length>=3)ctl+=seg('fcMode',[['hist','From past sprints'],['own','My estimate']],c.mode);
+  if(c.mode==='hist')ctl+=`<p class="small" style="margin:6px 0 0">Uses the last ${c.h.length} sprints: ${c.h.join(', ')} ${c.u}.</p>`;
+  else ctl+=`<input type="range" min="1" max="${Math.max(40,c.speed*2)}" step="1" data-fcs="1" value="${c.speed}" aria-label="Team speed per sprint"><output>${c.speed} ${c.u}</output>${c.h.length?`<p class="small" style="margin:4px 0 0">Past average: ${c.avg} ${c.u}.</p>`:''}`;
+  ctl+='</div>';
+  if(c.mode==='own')ctl+=`<div class="sl"><span class="lab">How predictable is the team?</span>${seg('fcSpread',Object.keys(SPREAD).map(k=>[k,SPREAD[k][1]]),S.fcSpread||'normal')}</div>`;
+  ctl+=`<div class="sl"><span class="lab">New work added each sprint</span><input type="range" min="0" max="${Math.max(10,c.speed,c.grow)}" step="1" data-fcg="1" value="${c.grow}" aria-label="New work added each sprint"><output>${c.grow} ${c.u}</output><p class="small" style="margin:4px 0 0">${c.meas!==null?`Measured over the last three sprints: ${c.meas} ${c.u}.`:'Most projects grow as they go. Slide to see what that does to the date.'}</p></div>`;
+  ctl+=`<div class="sl"><span class="lab">Sprint length</span>${seg('fcLen',[[1,'1 wk'],[2,'2 wks'],[3,'3 wks'],[4,'4 wks']],c.len,1)}</div>`;
+  ctl+=`<div class="sl"><label for="fc-date">Check a date</label><input id="fc-date" type="date" value="${esc(CHK||S.due||'')}"></div>`;
+  ctl+=`<div class="sl"><span class="lab">Work included</span>${c.es0.map(x=>`<label class="ck"><input type="checkbox" data-fcoff="${x.e.id}"${FCOFF[x.e.id]?'':' checked'}><span>${esc(x.e.title)||'Untitled'}</span><span class="small">${x.r} ${c.u}</span></label>`).join('')}</div></div>`;
+  return `<div class="fcwrap">${ctl}<div id="fcout">${fcOut(c)}</div></div>`;
+}
+function fcOut(c){
+  if(!c.rem)return insight('Nothing is included. Tick at least one item under Work included.','warn');
+  const d50=c.dt(c.pc(c.K,.5)),d80=c.dt(c.pc(c.K,.8)),d95=c.dt(c.pc(c.K,.95)),chk=CHK||S.due||'';
+  if(c.stuck)return insight(`At ${c.grow} ${c.u} of new work each sprint, work arrives about as fast as the team finishes it, so the project may never finish. Lower the new work or raise the team speed.`,'warn');
+  let o=`<div class="fchead"><div><span class="small">Most likely finish</span><b>${fmtD(d50)}</b></div><div class="main"><span class="small">Safe to promise (80% sure)</span><b>${fmtD(d80)}</b></div><div><span class="small">Almost certain (95%)</span><b>${fmtD(d95)}</b></div></div>`;
+  const w=c.conf.why.join('; ');
+  o+=`<p class="confl"><span class="pill c${c.conf.score}">Forecast confidence: ${c.conf.label}</span> <span class="small">Because ${w}.</span></p>`;
+  if(c.grow){const d0=c.dt(c.pc(c.K0,.8));o+=insight(d0===d80?`Adding ${c.grow} ${c.u} of new work each sprint does not move the safe date (${fmtD(d80)}).`:`Adding ${c.grow} ${c.u} of new work each sprint moves the safe date from <b>${fmtD(d0)}</b> to <b>${fmtD(d80)}</b>.`,d0===d80?'':'warn');}
+  if(chk){const p=c.chance(c.K,chk);o+=insight(`Chance of finishing everything by <b>${fmtD(chk)}</b>${chk===S.due?' (the project deadline)':''}: <b>${p}%</b>. ${p>=80?'Looks safe.':p>=50?'Possible, but risky: '+(100-p)+' in 100 runs finished later.':'Unlikely. See below for what can be delivered by then.'}`,p>=80?'ok':'warn');}
+  const mn=Math.min(...c.K),mx=Math.max(...c.K),bars=[];for(let k=mn;k<=mx;k++)bars.push([k,c.K.filter(x=>x===k).length]);
+  const top=Math.max(...bars.map(b=>b[1]));
+  o+=`<p class="small" style="margin:14px 0 0">How often each finish date came up in ${c.N.toLocaleString()} runs. Select a bar to check that date.</p><div class="hist">${bars.map(b=>{const d=c.dt(b[0]),p=Math.round(b[1]/c.N*100);return `<button class="bar${chk&&d>chk?' lt':''}${d===chk?' sel':''}" data-act="fcpick" data-v="${d}" style="height:${Math.max(3,Math.round(b[1]/top*100))}%" title="${fmtD(d)}: ${p}% of runs" aria-label="${fmtD(d)}, ${p}% of runs"></button>`;}).join('')}</div><div class="hlab"><span>${fmtD(c.dt(mn))}</span><span>${chk?`<i class="lg"></i> by ${fmtD(chk)} &nbsp; <i class="lg lt"></i> later`:''}</span><span>${fmtD(c.dt(mx))}</span></div>`;
+  const dv=c.deliver(chk);
+  if(!chk)o+='<h4 style="margin:16px 0 4px">What can we deliver by a date?</h4><p class="small" style="margin:0">Pick a date under Check a date, or select a bar in the chart.</p>';
+  else if(!dv.n)o+=`<h4 style="margin:16px 0 4px">What can we deliver by ${fmtD(chk)}?</h4><p class="small" style="margin:0">That date is before the end of the first sprint, so nothing can be promised by then.</p>`;
+  else{
+    const g=(t,cls,l,op)=>`<details class="dv ${cls}"${op?' open':''}><summary><b>${l.length}</b> ${t} <span class="small">${l.reduce((a,r)=>a+c.sz(r.s),0)} ${c.u}</span></summary>${l.map(r=>`<button class="tac" data-act="open" data-id="${r.s.id}"><span style="flex:1">${esc(r.s.title)||'Untitled'}</span><span class="small">${r.p}%</span></button>`).join('')||'<p class="small" style="margin:6px 0 0">None.</p>'}</details>`;
+    const a=dv.rows.filter(r=>r.p>=80),b=dv.rows.filter(r=>r.p>=40&&r.p<80),d=dv.rows.filter(r=>r.p<40);
+    o+=`<h4 style="margin:16px 0 4px">What can we deliver by ${fmtD(chk)}?</h4><p class="small" style="margin:0 0 8px">${dv.n} sprint${dv.n===1?'':'s'} fit before that date. Stories are taken in backlog order, and the percentage is the chance each one is done by then.</p><div class="dv3">${g('safe to promise','ok',a,true)}${g('possible, not certain','mid',b,!a.length)}${g('unlikely','bad',d,false)}</div>`;
+  }
+  if(c.es.length>1)o+=`<h4 style="margin:16px 0 4px">When each ${lc(cfg().epic)} should be done</h4><p class="small" style="margin:0 0 6px">Assumes work is done in backlog order${c.grow?', with new work joining the end':''}.</p>`+c.es.map(x=>{const p=x.e.due?c.chance(x.k,x.e.due):null;return `<div class="erow"><button class="t" data-act="open" data-id="${x.e.id}">${esc(x.e.title)||'Untitled'}</button><span class="small">80% sure by ${fmtD(c.dt(c.pc(x.k,.8)))}</span>${p===null?'<span class="small">No deadline</span>':`<span class="pill${p<50?' bad':p<80?' mid':''}">${p}% by ${fmtD(x.e.due)}</span>`}</div>`;}).join('');
+  o+=`<p class="small">${c.rem} ${c.u} of work included${c.un?`. ${c.un} ${c.un===1?'story has':'stories have'} no estimate and ${c.un===1?'is':'are'} counted at the typical size of ${c.typ} ${c.u}`:''}.</p>`;
+  return o;
+}
+document.addEventListener('input',ev=>{
+  const t=ev.target;
+  if(t.dataset&&t.dataset.fcg!==undefined&&S){S.fcGrow=+t.value;const o=t.nextElementSibling;if(o)o.textContent=t.value+' '+(S.m==='waterfall'?'days':'pts');fcRefresh();save();}
+});
+function fcRefresh(){const o=$('#fcout');if(o&&S)o.innerHTML=fcOut(fcCalc());}
+document.addEventListener('change',ev=>{
+  const t=ev.target,d=t.dataset||{};
+  if(d.q&&S&&isMgr())snap();
+  if(d.fcoff!==undefined&&S){FCOFF[d.fcoff]=!t.checked;fcRefresh();}
+  if(t.id==='fc-date'&&S){CHK=t.value;fcRefresh();}
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target,d=t.dataset||{};
+  if(t.type==='range'&&d.q){const o=t.nextElementSibling;if(o&&o.tagName==='OUTPUT')o.textContent=t.value+(d.suf||'');}
+  if(d.fcs!==undefined&&S){S.fcSpeed=+t.value;const o=t.nextElementSibling;if(o)o.textContent=t.value+' '+(S.m==='waterfall'?'days':'pts');fcRefresh();save();}
+});
+document.addEventListener('click',ev=>{
+  const b=ev.target.closest&&ev.target.closest('[data-act]');if(!b||!S)return;
+  const a=b.dataset.act;
+  if(a==='xp'){XP=XP===b.dataset.id?null:b.dataset.id;renderMain();}
+  else if(a==='setv'){if(!isMgr())return;const it=by(b.dataset.id);if(!it)return;snap();it[b.dataset.f]=b.dataset.s?b.dataset.v:+b.dataset.v;renderAll();}
+  else if(a==='cmpgo'){S.tech=b.dataset.v;S.score=b.dataset.v;XP=b.dataset.id;renderMain();window.scrollTo(0,0);}
+  else if(a==='fcset'){S[b.dataset.k]=b.dataset.n?+b.dataset.v:b.dataset.v;renderMain();}
+  else if(a==='fcpick'){CHK=b.dataset.v;const i=$('#fc-date');if(i)i.value=CHK;fcRefresh();}
+});
+
+function aMost(){
+  const c=cfg(),es=epics();
+  let h=`<div class="mission"><span class="kind">Mission</span><textarea rows="2" data-p="mission" aria-label="Mission" placeholder="Why does this project exist? One sentence."${dis()}>${esc(S.mission||'')}</textarea></div>`;
+  es.forEach(e=>{
+    const l=storiesOf(e.id);
+    h+=`<section class="epic"><div class="epic-h"><span class="kind">Objective</span><h3><button data-act="open" data-id="${e.id}">${esc(e.title)||'Untitled'}</button></h3>${dueTag(e)}${meter(l)}</div><div class="lvl"><span class="kind">Strategy</span><textarea rows="2" data-q="strategy" data-id="${e.id}" aria-label="Strategy" placeholder="How will this objective be reached?"${dis()}>${esc(e.strategy||'')}</textarea></div><div class="lvl"><span class="kind">Tactics</span>${l.map(s=>`<button class="tac" data-act="open" data-id="${s.id}"><span class="key">${esc(ik(s))}</span><span style="flex:1">${esc(s.title)||'Untitled'}</span><span class="st st-${s.status}">${ST[s.status]}</span></button>`).join('')||'<p class="note">No tactics yet. Add '+pl(c.story)+' to this '+lc(c.epic)+' in the backlog.</p>'}</div></section>`;
+  });
+  return h+(es.length?'':'<p class="hint">Add an item in the backlog to set the first objective.</p>');
+}
+function aMap(){
+  let h='';
+  epics().forEach(e=>{
+    const l=storiesOf(e.id),as=e.asis||[];
+    h+=`<section class="epic"><div class="epic-h"><span class="kind">Process</span><h3><button data-act="open" data-id="${e.id}">${esc(e.title)||'Untitled'}</button></h3><span class="small">${as.length} steps today, ${l.length} planned, ${l.filter(s=>s.status==='done').length} delivered</span></div><div class="lane"><span class="kind">As-is: how it works today</span><div class="flow">${as.map((t,i)=>`<span class="step">${esc(t)}<button class="x" data-act="asisDel" data-id="${e.id}" data-i="${i}" aria-label="Remove step">×</button></span>`).join('<span class="arr">→</span>')||'<span class="small">No steps recorded yet.</span>'}</div>${isMgr()?`<div class="acadd"><input type="text" id="asis-${e.id}" aria-label="New as-is step" placeholder="Add a step in today’s process"><button class="btn sm" data-act="asisAdd" data-id="${e.id}">Add step</button></div>`:''}</div><div class="lane"><span class="kind">To-be: how it will work</span><div class="flow">${l.map(s=>`<button class="step${s.status==='done'?' done':''}" data-act="open" data-id="${s.id}">${esc(s.title)||'Untitled'}<span class="small">${ST[s.status]}</span></button>`).join('<span class="arr">→</span>')||'<span class="small">Nothing planned yet. Each story becomes a step of the new process.</span>'}</div></div></section>`;
+  });
+  return h||'<p class="hint">Add an item in the backlog to map its process.</p>';
+}
+let EDIT=false;
+const APP_URL='https://claude.ai/artifact/84soUptJH2UcBysHZEGiHv';
+const myEmail=()=>((ME&&ME.email)||'').toLowerCase();
+const myEntries=()=>DB.team.filter(t=>(!!meId()&&t.id===meId())||(!!t.email&&!!myEmail()&&t.email.toLowerCase()===myEmail()));
+function joinBanner(){
+  if(MODE!=='shared'||ACT||isMgr()||!meId()||myEntries().length)return '';
+  return RO?'<div class="jb">You have view-only access and are not on this team yet. Ask a manager to add your email address to the team, and the work assigned to you will show here.</div>':'<div class="jb">You are not on this team yet. <button class="btn sm pri" data-act="joinTeam">Join as a member</button> A manager can then assign work to you.</div>';
+}
+function invBox(t){
+  const msg=`Hello${t.label?' '+t.label:''},\n\nI have added you to our team on Plotline as a ${t.role==='manager'?'manager':'member'}.\n\nOpen ${APP_URL} and sign in to Claude with ${t.email}. I am also sending you a sharing invitation from Claude for the same address.`;
+  return `<div class="jb"><label for="inv-t">Invitation for ${esc(t.email)}</label><textarea id="inv-t" rows="7" readonly style="width:100%;margin:6px 0;background:var(--bg);border:1px solid var(--line);border-radius:7px;padding:8px">${esc(msg)}</textarea><a class="btn sm" target="_blank" rel="noopener" href="mailto:${encodeURIComponent(t.email)}?subject=${encodeURIComponent('Invitation to Plotline')}&amp;body=${encodeURIComponent(msg)}">Open in email app</a> <span class="small">If your email app does not open, copy the text above.</span></div>`;
+}
+let TQ=0;
+document.addEventListener('change',ev=>{
+  const t=ev.target,d=t.dataset||{};
+  if(d.tm!==undefined){const m=tm(d.tm);if(m&&isMgr()){m.role=t.value;renderMain();}return;}
+  if(t.id==='pdue'&&S&&isMgr()){S.due=t.value;renderMain();return;}
+  if(!d.q||!S)return;
+  const it=by(d.id);if(!it||(!isMgr()&&d.q!=='status'))return;
+  it[d.q]=d.n?+t.value:t.value;renderAll();
+});
+document.addEventListener('input',ev=>{
+  const t=ev.target,d=t.dataset||{};
+  if(t.tagName==='TEXTAREA'&&d.q&&S&&isMgr()){const it=by(d.id);if(it){it[d.q]=t.value;save();}}
+  if(d.p&&S&&isMgr()){S[d.p]=t.value;save();}
+  if(t.id==='tm-q'&&USER){
+    clearTimeout(TQ);
+    TQ=setTimeout(()=>{
+      USER.search(t.value.trim()).then(l=>{
+        const b=$('#tm-hits');if(!b)return;
+        const hs=(l||[]).filter(p=>p&&p.id&&p.name&&!tm(p.id)&&p.id!==meId()).slice(0,8);
+        hs.forEach(p=>{NAMES[p.id]=p.name;});
+        b.innerHTML=hs.map(p=>`<div class="cr-row"><span>${esc(p.name)}</span><button class="btn sm" data-act="tmAdd" data-id="${esc(p.id)}">Add as member</button></div>`).join('')||'<p class="note">No one else found with that name.</p>';
+      }).catch(()=>{});
+    },250);
+  }
+});
+
+/* drag and drop */
+let dragId=null;
+document.addEventListener('dragstart',ev=>{const c=ev.target.closest&&ev.target.closest('[draggable]');if(c){dragId=c.dataset.id;try{ev.dataTransfer.setData('text/plain',dragId);ev.dataTransfer.effectAllowed='move';}catch(e){}}});
+const zone=ev=>{const z=ev.target.closest&&ev.target.closest('[data-set]'),it=dragId&&by(dragId);return z&&it&&z.dataset.for===it.type?z:null;};
+document.addEventListener('dragover',ev=>{const z=zone(ev);if(z){ev.preventDefault();z.classList.add('over');}});
+document.addEventListener('dragleave',ev=>{const z=ev.target.closest&&ev.target.closest('[data-set]');if(z&&!z.contains(ev.relatedTarget))z.classList.remove('over');});
+document.addEventListener('drop',ev=>{const z=zone(ev);if(z){ev.preventDefault();apply(by(dragId),z.dataset.set);}dragId=null;});
+document.addEventListener('dragend',()=>{dragId=null;document.querySelectorAll('.over').forEach(x=>x.classList.remove('over'));});
+init();
+
+renderAll();
+</script>
+</body>
+</html>
